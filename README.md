@@ -10,7 +10,7 @@ The U.S. Treasury's Financial Services AI Risk Management Framework (February 20
 
 The gap is acute in two areas:
 
-**AML/KYC false positives.** The U.S. anti-money laundering compliance industry operates at a **90–95% false-positive rate**, costing U.S. financial institutions an estimated **$25 billion annually** in unnecessary investigation work (LexisNexis Risk Solutions, *True Cost of Financial Crime Compliance*, 2023; FinCEN Strategic Plan 2022–2025). AI-driven transaction analysis can reduce this rate by an order of magnitude — but only under rigorous governance that prevents model opacity, hallucination, and PII leakage from creating new regulatory exposures.
+**AML/KYC false positives.** The U.S. anti-money laundering compliance industry operates at a **90–95% false-positive rate**, costing U.S. financial institutions an estimated **USD 25.3 billion annually** in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019). AI-driven transaction analysis can reduce this rate by an order of magnitude — but only under rigorous governance that prevents model opacity, hallucination, and PII leakage from creating new regulatory exposures.
 
 **Regulatory Q&A hallucination.** LLMs queried against FINRA, SEC, and FinCEN guidance produce confident but factually incorrect citations at rates incompatible with audit trail requirements under FINRA Rule 4370 and SEC Rule 17a-4. Without a verifiable output-validation layer, these systems cannot be deployed in regulated environments.
 
@@ -136,7 +136,7 @@ I designed an observability pipeline that captures full LLM traces, detects hall
 
 I designed a hybrid supervised/unsupervised anomaly detection pipeline targeting a **false-positive rate below 10%** against an industry baseline of 90–95%.
 
-> The U.S. AML compliance industry generates false positives on 90–95% of flagged transactions, costing U.S. financial institutions approximately $25 billion annually in unnecessary investigation work (LexisNexis Risk Solutions, *True Cost of Financial Crime Compliance*, 2023; FinCEN Strategic Plan 2022–2025). This pipeline is designed to reduce that rate by an order of magnitude through hybrid ML with a dedicated false-positive reduction stage.
+> The U.S. AML compliance industry generates false positives on 90–95% of flagged transactions, costing U.S. financial institutions approximately USD 25.3 billion annually in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019). This pipeline is designed to reduce that rate by an order of magnitude through hybrid ML with a dedicated false-positive reduction stage.
 
 | | Industry Baseline | This Architecture |
 |---|---|---|

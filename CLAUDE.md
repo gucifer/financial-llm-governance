@@ -44,8 +44,9 @@ This file is the master context document for all Claude Code sessions working in
 
 ## Key Metrics to Substantiate
 
-- AML false-positive rate: **90–95%** industry baseline (cite: FinCEN + LexisNexis 2023 True Cost of Financial Crime Compliance study — **still needs to be obtained and cited**)
-- Annual AML compliance cost to U.S. institutions: **$25 billion+** (same source — **still needs to be obtained and cited**)
+- AML false-positive rate: **90–95%** — Saaradeey et al. (2019), *Disrupting status quo in AML compliance*, Oracle White Paper, as cited in Coelho, De Simoni & Prenio (2019), FSI Insights No. 18, BIS, p. 3
+- Annual AML compliance cost to U.S. institutions: **USD 25.3 billion** — LexisNexis Risk Solutions (2018), *2018 True Cost of Compliance Study*, as cited in Coelho, De Simoni & Prenio (2019), FSI Insights No. 18, BIS, p. 3
+- Primary authoritative source: Coelho, R., De Simoni, M. & Prenio, J. (2019). *Suptech applications for anti-money laundering*. FSI Insights on policy implementation, No. 18. Bank for International Settlements, August 2019. https://www.bis.org/fsi/publ/insights18.pdf
 - Target: **<10% false-positive rate** via the hybrid pipeline in this repo
 
 ---
