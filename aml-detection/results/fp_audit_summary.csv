@@ -1,0 +1,5 @@
+tx_id,confidence_score,top_shap_feature,top_shap_contribution
+tx_00012906,0.856301,trans_feat_52,2.04382
+tx_00012320,0.855345,trans_feat_52,2.063048
+tx_00012342,0.853762,trans_feat_52,2.011996
+tx_00014296,0.843678,trans_feat_52,1.709139
