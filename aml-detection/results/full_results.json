@@ -56,5 +56,55 @@
       "agg_feat_18"
     ],
     "alert": true
+  },
+  "gcn": {
+    "TP": 661.0,
+    "FP": 321.3333,
+    "TN": 15265.6667,
+    "FN": 422.0,
+    "precision": 0.6735,
+    "recall": 0.6104,
+    "f1_illicit": 0.6403,
+    "false_positive_rate": 0.0206,
+    "false_negative_rate": 0.3896,
+    "auc_roc": 0.8787
+  },
+  "gat": {
+    "TP": 814.0,
+    "FP": 2379.0,
+    "TN": 13208.0,
+    "FN": 269.0,
+    "precision": 0.2549,
+    "recall": 0.7516,
+    "f1_illicit": 0.3807,
+    "false_positive_rate": 0.1526,
+    "false_negative_rate": 0.2484,
+    "auc_roc": 0.8851
+  },
+  "evaluation_pitfalls": {
+    "random_split": {
+      "TP": 1222,
+      "FP": 9,
+      "TN": 12597,
+      "FN": 142,
+      "precision": 0.9927,
+      "recall": 0.8959,
+      "f1_illicit": 0.9418,
+      "false_positive_rate": 0.0007,
+      "false_negative_rate": 0.1041,
+      "auc_roc": 0.9961
+    },
+    "temporal_split": {
+      "TP": 784,
+      "FP": 89,
+      "TN": 15498,
+      "FN": 299,
+      "precision": 0.8981,
+      "recall": 0.7239,
+      "f1_illicit": 0.8016,
+      "false_positive_rate": 0.0057,
+      "false_negative_rate": 0.2761,
+      "auc_roc": 0.9432
+    }
   }
 }

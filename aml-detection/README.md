@@ -79,6 +79,30 @@ Recall constraint: ≥ 0.65 (satisfied: 0.6726). The recall floor operationalise
 
 > **Regulatory interpretation:** A reduction in FPR directly translates to fewer compliance analyst-hours spent investigating licit transactions. At the U.S. industry scale ($25.3B/year, 90–95% FPR baseline), a 10-percentage-point FPR reduction represents an estimated $2.5–3B annual reduction in misdirected compliance expenditure. This study demonstrates the methodology on a public benchmark; the 94.7% relative FPR reduction on the Elliptic dataset illustrates the technique's potential within the ML layer of a production AML pipeline.
 
+### Model-family comparison (graph baselines)
+
+The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neural Networks — GCN (Kipf & Welling, 2017) and GAT (Veličković et al., 2018) — under the **same** temporal split and the **same** illicit-class / FPR metrics. Both Weber et al. (2019) and the Feedzai paper include a GCN, so a graph baseline is expected.
+
+| Model | FPR | Recall | Precision | F1 (illicit) | AUC-ROC |
+|-------|-----|--------|-----------|--------------|---------|
+| XGBoost baseline | 0.0057 | 0.7239 | 0.8981 | 0.8016 | 0.9432 |
+| **Hybrid FP-optimised** | **0.0003** | 0.6726 | 0.9945 | 0.8024 | 0.8933 |
+| GCN | 0.0206 | 0.6104 | 0.6735 | 0.6403 | 0.8787 |
+| GAT | 0.1526 | 0.7516 | 0.2549 | 0.3807 | 0.8851 |
+
+**Finding:** On Elliptic's hand-engineered features, gradient-boosted trees clearly outperform vanilla GNNs (GCN F1 0.64, GAT F1 0.38), consistent with Weber (2019) and Feedzai. Graph structure alone does **not** reduce the false-positive rate — the GCN's FPR (0.0206) is ~3.6× the tree baseline and ~70× the hybrid. The FPR reduction comes from the cost-sensitive threshold pipeline, not from the model family.
+
+### Common evaluation pitfalls
+
+Public Elliptic notebooks routinely report illicit-class F1 > 0.93. Using our **own** XGBoost — identical model and hyperparameters, changing only the split — shows why:
+
+| Split | FPR | Recall | Precision | F1 (illicit) | AUC-ROC |
+|-------|-----|--------|-----------|--------------|---------|
+| Random 70/30 (leaky) | 0.0007 | 0.8959 | 0.9927 | **0.9418** | 0.9961 |
+| Temporal 1–34 / 35–49 (honest) | 0.0057 | 0.7239 | 0.8981 | **0.8016** | 0.9432 |
+
+Random splitting leaks future time steps into training and averages out the documented post-timestep-43 performance cliff, inflating F1 from 0.80 to 0.94 — exactly the range seen in notebooks that random-split. The temporal results reported throughout this study are therefore the honest, harder, and operationally correct numbers.
+
 ---
 
 ## Repository Structure
@@ -94,7 +118,8 @@ aml-detection/
 │   ├── baseline.py              # Feedzai XGBoost baseline + FPR metrics
 │   ├── hybrid_pipeline.py       # cost-sensitive XGB + threshold opt + IF blend
 │   ├── shap_audit.py            # SHAP → FINRA Rule 4370 audit JSON
-│   └── eval_harness.py          # drift detection + calibration + temporal monitoring
+│   ├── eval_harness.py          # drift detection + calibration + temporal monitoring
+│   └── gnn_baseline.py          # GCN / GAT graph baselines (same temporal protocol)
 ├── notebooks/
 │   └── aml_fp_reduction_study.ipynb   # complete study (run this)
 └── results/                     # generated outputs (plots, audit log, CSVs)
@@ -114,11 +139,15 @@ pip install -r requirements.txt
 jupyter notebook notebooks/aml_fp_reduction_study.ipynb
 ```
 
-The notebook runs all four stages in order:
+The notebook runs all stages in order:
 1. Baseline reproduction (Feedzai XGBoost, default threshold)
 2. Hybrid pipeline (cost-sensitive XGBoost + threshold optimisation + IF blend)
 3. SHAP explainability + FINRA audit JSON generation
 4. Observability: drift detection, calibration, temporal FPR monitoring
+5. Common evaluation pitfalls (temporal vs. random split, same model)
+6. Graph baselines (GCN / GAT) under the same temporal protocol
+
+> Stage 6 requires `torch` and `torch-geometric` (CPU build is sufficient) and adds ~20 minutes of training on CPU. The other stages run in a few minutes.
 
 ---
 

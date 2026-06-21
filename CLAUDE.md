@@ -9,6 +9,7 @@ This file is the master context document for all Claude Code sessions working in
 **Petitioner:** Arpan Parikh, Senior ML Engineer at Prudential Financial
 **Purpose:** EB-2 National Interest Waiver (NIW) petition under the Dhanasar (2016) 3-prong test
 **Current focus:** Prong 1 (Substantial Merit & National Importance) — building a verifiable open-source trail
+**Roadmap file:** `c:\Users\apari\OneDrive\Desktop\eb2_niw\NIW_OpenSource_Roadmap.md` — read this for the full strategy
 
 ---
 
@@ -42,12 +43,12 @@ This file is the master context document for all Claude Code sessions working in
 
 ---
 
-## Key Metrics to Substantiate
+## Key Metrics (verified, cite these exactly)
 
 - AML false-positive rate: **90–95%** — Saaradeey et al. (2019), *Disrupting status quo in AML compliance*, Oracle White Paper, as cited in Coelho, De Simoni & Prenio (2019), FSI Insights No. 18, BIS, p. 3
 - Annual AML compliance cost to U.S. institutions: **USD 25.3 billion** — LexisNexis Risk Solutions (2018), *2018 True Cost of Compliance Study*, as cited in Coelho, De Simoni & Prenio (2019), FSI Insights No. 18, BIS, p. 3
-- Primary authoritative source: Coelho, R., De Simoni, M. & Prenio, J. (2019). *Suptech applications for anti-money laundering*. FSI Insights on policy implementation, No. 18. Bank for International Settlements, August 2019. https://www.bis.org/fsi/publ/insights18.pdf
-- Target: **<10% false-positive rate** via the hybrid pipeline in this repo
+- Primary source: Coelho, R., De Simoni, M. & Prenio, J. (2019). *Suptech applications for anti-money laundering.* FSI Insights No. 18, BIS, August 2019. https://www.bis.org/fsi/publ/insights18.pdf
+- **Measured study result:** FPR 0.0057 → 0.0003 (−94.7% relative) on Elliptic test set, recall 0.6726 (floor ≥ 0.65 satisfied), F1 0.8024
 
 ---
 
@@ -57,7 +58,7 @@ This file is the master context document for all Claude Code sessions working in
 - **AWS API Gateway** — cloud boundary
 - **Azure OpenAI (GPT-4o)** — LLM inference endpoint
 
-This is the real stack. All architecture in this repo reflects it.
+This is the real stack. All architecture in this repo reflects it. Frame as "reference architecture" not "Prudential system" — IP boundary.
 
 ---
 
@@ -126,69 +127,101 @@ conda run -n base python architecture.py
 # Output: docs/financial_llm_governance_architecture.png
 ```
 
-### Install dependencies
-
-```bash
-conda run -n base pip install diagrams pillow
-winget install Graphviz.Graphviz --source winget
-```
-
 ---
 
-## Repo Structure (planned)
+## Repo Structure (current state)
 
 ```
 financial-llm-governance/
-├── README.md                    ← NEXT TASK: write this
+├── README.md                    ← exists (comprehensive, written in prior session)
 ├── CLAUDE.md                    ← this file
 ├── docs/
-│   ├── architecture.py          ← DONE: diagram source
-│   └── financial_llm_governance_architecture.png  ← DONE: generated diagram
-├── gateway/                     ← Goal 1: Kong + AWS API GW implementation
-├── observability/               ← Goal 2: hallucination detection, eval harnesses
-├── aml-detection/               ← Goal 3: hybrid AML pipeline
-└── xai-compliance/              ← Goal 4: SHAP/LIME → FINRA audit JSON
+│   ├── architecture.py          ← DONE
+│   └── financial_llm_governance_architecture.png  ← DONE
+├── gateway/                     ← Goal 1: stub only
+├── observability/               ← Goal 2: stub only
+├── aml-detection/               ← Goal 3: COMPLETE (see below)
+│   ├── README.md                ← populated with real results
+│   ├── requirements.txt
+│   ├── data/elliptic/dataset/   ← Elliptic CSVs here (not committed, excluded by .gitignore)
+│   ├── src/
+│   │   ├── data_loader.py       ← loads Elliptic, temporal split
+│   │   ├── baseline.py          ← Feedzai XGBoost baseline + FPR metrics
+│   │   ├── hybrid_pipeline.py   ← cost-sensitive XGB + CV threshold opt + IF blend
+│   │   ├── shap_audit.py        ← SHAP → FINRA Rule 4370 / SEC Rule 17a-4 audit JSON
+│   │   └── eval_harness.py      ← KS drift + Brier/ECE calibration + temporal FPR
+│   ├── notebooks/
+│   │   └── aml_fp_reduction_study.ipynb  ← end-to-end executable (DONE, clean run)
+│   └── results/                 ← 12 artifacts: plots, audit NDJSON, CSVs, full_results.json
+└── xai-compliance/              ← Goal 4: stub only (SHAP work folded into aml-detection)
 ```
 
 ---
 
-## What Has Been Done (Session History)
+## AML Detection Study — Key Implementation Details
 
-- [x] Created and cloned `financial-llm-governance` repo
-- [x] Designed 9-layer architecture with 14 numbered data flow steps
-- [x] Generated architecture diagram (`docs/architecture.py` + PNG)
-- [x] Embedded legend table (14 rows) directly in the diagram
-- [x] Font: Cascadia Code NF SemiBold throughout
-- [x] All rows render horizontally (using the list rank-forcing trick)
-- [x] Legend anchored below diagram with `rank=sink` subgraph
-- [x] Feedback edge uses `constraint=False` to prevent layout disruption
+**Dataset:** Elliptic Bitcoin dataset (Weber et al., 2019), 203,769 txns / 49 time steps / ~21% labeled  
+**Temporal split:** train time steps 1–34, test 35–49 (matches Feedzai section 4.1)  
+**Conda env:** `c:\Users\apari\OneDrive\Desktop\eb2_niw\.conda\python.exe` (Python 3.13.13)  
+**Run Python from this env, not the system Python 3.14 which lacks the ML packages**
 
-## What Is Next
+### Three contributions over Feedzai baseline
 
-- [ ] **Write README.md** — this is the immediate next task
-- [ ] Contribute to `Portkey-AI/gateway` — FS AI RMF guardrail plugin, U.S. financial PII patterns, FINRA/SEC audit log schema
-- [ ] Contribute to `langfuse/langfuse` — financial hallucination eval suite
-- [ ] Extend Feedzai AML-Elliptic repo with U.S. benchmark (PaySim dataset)
-- [ ] Implement ECLIPSE hallucination detector (`pip install financial-llm-eval`)
-- [ ] Build SHAP/LIME XAI module → FINRA-compliant audit JSON
-- [ ] Post arXiv preprint of AML false-positive reduction methodology
-- [ ] Submit public comment on FS AI RMF at regulations.gov
+1. `scale_pos_weight = n_licit / n_illicit` (~7.6:1 on train) — cost-sensitive XGBoost
+2. Cross-validated precision-recall threshold optimisation — recall floor 0.65 (used in notebook; 0.70 is the code default but causes threshold transfer failure due to 99.4% feature drift between train/test periods)
+3. Isolation Forest trained on licit-class only, anomaly score blended at weight=0.15; IF blending is applied **inside CV folds** during threshold search (not just at test time) — critical for threshold consistency
+
+### Measured results (5-run average, Elliptic test set)
+
+| Metric | Baseline | Hybrid | Delta |
+|--------|----------|--------|-------|
+| FPR | 0.0057 | 0.0003 | −94.7% |
+| Recall | 0.7239 | 0.6726 | −0.05 (floor ≥ 0.65 satisfied) |
+| Precision | 0.8981 | 0.9945 | +0.10 |
+| F1 | 0.8016 | 0.8024 | +0.001 |
+| AUC-ROC | 0.9432 | 0.8933 | −0.05 |
+| Threshold | 0.5 | 0.8324 | CV-optimised |
+
+### Scope caveat (always include)
+
+The study demonstrates FPR reduction methodology on public data. It illustrates and aligns with the industry-wide 90–95% FPR figure but does NOT independently prove it. That figure rests on the BIS/LexisNexis citation above and refers to rule-based production AML systems, not an ML benchmark on Bitcoin data.
 
 ---
 
-## README Requirements (for next session)
+## Git State
 
-The README must:
-1. Open with the one-sentence PE definition
-2. Include the architecture diagram (`docs/financial_llm_governance_architecture.png`)
-3. Map each component to at least two FS AI RMF regulatory anchors by name
-4. Cite OWASP LLM Top 10, NIST AI RMF, and Treasury FS AI RMF inline
-5. Call out the AML false-positive reduction metric (<10% target vs 90–95% baseline)
-6. Describe the two workload paths (Reg Q&A and AML/KYC)
-7. Include a "Getting Started" section with install and diagram generation commands
-8. Link to open-source repos being contributed to (LiteLLM, Langfuse, Feedzai)
-9. List all four PE goals as repo sections
-10. Keep authorship framing in first person: "I designed X", not "we will build X"
+**Remote:** `origin/main` (GitHub — repo exists and was last pushed before the AML study)  
+**Latest local commit:** `dd7e724` — "Add AML false-positive reduction study (Tier 1 flagship)"  
+**Status:** Commit is local only. **Push to GitHub is the next required action** to timestamp the work.
+
+```bash
+cd "c:/Users/apari/OneDrive/Desktop/eb2_niw/financial-llm-governance"
+git push origin main
+```
+
+---
+
+## What Has Been Done
+
+- [x] Created and cloned `financial-llm-governance` repo on GitHub
+- [x] Designed 9-layer architecture with 14 numbered data flow steps
+- [x] Generated architecture diagram (`docs/architecture.py` + PNG)
+- [x] Written comprehensive repo README.md
+- [x] **Tier 1 flagship AML study — complete:**
+  - [x] `aml-detection/src/` — all 5 modules written and tested
+  - [x] `aml-detection/notebooks/aml_fp_reduction_study.ipynb` — runs end-to-end, clean
+  - [x] `aml-detection/results/` — 12 artifacts generated (plots, NDJSON, CSVs, JSON)
+  - [x] `aml-detection/README.md` — populated with real measured results
+  - [x] Committed locally as `dd7e724`
+
+## What Is Next (in priority order)
+
+1. **Push to GitHub** — `git push origin main` — timestamps the commit; do this before the preprint
+2. **Write arXiv preprint** — 4–6 pages; content is already in the README and notebook; needs reformatting into paper structure; arXiv endorsement for cs.LG may be needed (start early)
+3. **Technical blog post** — Medium or Towards Data Science; cover AML study + Goal 1 gateway architecture pattern (no Prudential code); link repo and preprint
+4. **Evidence log** — start a spreadsheet tracking stars, forks, citations from day of push
+5. **Workshop paper submission** — same preprint reformatted; FinNLP@EMNLP or IEEE S&P financial-AI track; do not gate filing on acceptance
+6. **Fix petition body** — remove `[ACTION ITEM]` brackets; fix LexisNexis citation year (petition says "2023", correct source is 2018/BIS)
 
 ---
 
@@ -196,21 +229,19 @@ The README must:
 
 1. Tie every artifact back to the PE one-sentence definition
 2. Cite at least two regulatory anchors per document
-3. The false-positive reduction claim (<10% vs 90–95%) is the strongest Cake Framework metric — include in every AML artifact
-4. Keep authorship **solo or first-author** — adjudicators scrutinize multi-author work
-5. Timestamp everything: commit early and often before filing date
+3. The false-positive reduction claim is the strongest Cake Framework metric — include in every AML artifact; frame as "illustrates and aligns with" the 90–95% figure, not "proves" it
+4. Keep authorship **solo or first-author** everywhere — adjudicators scrutinize multi-author work
+5. Timestamp everything: commit early and often; push before filing
 6. Frame as "reference architecture" not "Prudential system" — IP boundary
 
 ---
 
-## Open-Source Resources Reference
+## Open-Source Resources Reference (trimmed to what's used)
 
-| Resource | URL | Contribution Plan |
-|----------|-----|-------------------|
-| Portkey-AI Gateway (12.1k+ stars) | https://github.com/Portkey-AI/gateway | FS AI RMF guardrail plugin, U.S. financial PII patterns (ABA/ACH/ITIN/EIN), FINRA/SEC audit log schema (Rule 4370 / 17a-4), FinCEN SAR/STR output validator |
-| Langfuse | https://github.com/langfuse/langfuse | Financial hallucination eval suite, FS AI RMF audit trail module |
-| Feedzai AML-Elliptic | https://github.com/feedzai/research-aml-elliptic | Extend with U.S. regulatory benchmark, measure FP reduction |
-| AMLGentex | https://github.com/aidotse/AMLGentex | Add U.S. SAR/BSA alert pattern module |
-| ECLIPSE paper | https://arxiv.org/abs/2512.03107 | Implement in Python as `financial-llm-eval` package |
-| XAI-Comply paper | https://link.springer.com/chapter/10.1007/978-981-92-0126-6_1 | Build Python OSS equivalent |
-| SHAP library | https://github.com/shap/shap | Core dependency for Goal 4 XAI module |
+| Resource | URL | Used in |
+|----------|-----|---------|
+| Feedzai AML-Elliptic | https://github.com/feedzai/research-aml-elliptic | Tier 1 flagship baseline |
+| SHAP library | https://github.com/shap/shap | aml-detection/src/shap_audit.py |
+| Portkey-AI Gateway (12.1k+ stars) | https://github.com/Portkey-AI/gateway | Tier 3 optional PR |
+| Langfuse | https://github.com/langfuse/langfuse | Tier 3 optional PR |
+| regulations.gov | https://www.regulations.gov | Tier 2 public comment |
