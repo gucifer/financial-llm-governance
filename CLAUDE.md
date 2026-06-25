@@ -163,7 +163,8 @@ financial-llm-governance/
 **Dataset:** Elliptic Bitcoin dataset (Weber et al., 2019), 203,769 txns / 49 time steps / ~21% labeled  
 **Temporal split:** train time steps 1–34, test 35–49 (matches Feedzai section 4.1)  
 **Conda env:** `c:\Users\apari\OneDrive\Desktop\eb2_niw\.conda\python.exe` (Python 3.13.13)  
-**Run Python from this env, not the system Python 3.14 which lacks the ML packages**
+**Run Python from this env, not the system Python 3.14 which lacks the ML packages**  
+**Installed:** scikit-learn, xgboost, shap, imbalanced-learn, scipy, matplotlib, seaborn + **torch 2.12.1+cpu, torch-geometric 2.8.0** (for the GNN baseline)
 
 ### Three contributions over Feedzai baseline
 
@@ -182,6 +183,30 @@ financial-llm-governance/
 | AUC-ROC | 0.9432 | 0.8933 | −0.05 |
 | Threshold | 0.5 | 0.8324 | CV-optimised |
 
+### Model-family comparison (graph baselines — `src/gnn_baseline.py`)
+
+GCN (Kipf & Welling 2017) and GAT (Veličković et al. 2018) on the actual transaction graph (203,769 nodes, ~470k undirected edges, same 165 features), evaluated under the **same** temporal split + illicit-class/FPR metrics. Cost-sensitive (class-weighted loss); recall-floor threshold tuned on a leakage-free training-period hold-out.
+
+| Model | FPR | F1 (illicit) | AUC |
+|-------|-----|------|-----|
+| XGBoost baseline | 0.0057 | 0.8016 | 0.9432 |
+| Hybrid FP-optimised | 0.0003 | 0.8024 | 0.8933 |
+| GCN | 0.0206 | 0.6403 | 0.8787 |
+| GAT | 0.1526 | 0.3807 | 0.8851 |
+
+**Finding:** gradient-boosted trees beat vanilla GNNs on Elliptic's engineered features (consistent with Weber 2019 / Feedzai); graph structure alone does NOT reduce FPR — the cost-sensitive threshold pipeline does. (GCN runtime ~13 min, GAT ~7 min on CPU.)
+
+### Evaluation-pitfalls control (Stage 5 of the notebook)
+
+Same XGBoost, identical hyperparameters, only the split differs:
+
+| Split | F1 (illicit) | AUC | FPR |
+|-------|------|-----|-----|
+| Random 70/30 (leaky) | 0.9418 | 0.9961 | 0.0007 |
+| Temporal (honest) | 0.8016 | 0.9432 | 0.0057 |
+
+Random splitting leaks future time steps and inflates F1 from 0.80 → 0.94 — matching the headline numbers in public Elliptic notebooks (e.g. the reference RF notebook's 0.938). This converts a common flaw into a methodological contribution and reinforces the honesty narrative. The 3 third-party reference notebooks that prompted this live in `aml-detection/notebooks/reference/` and are **git-ignored** (provenance protection).
+
 ### Scope caveat (always include)
 
 The study demonstrates FPR reduction methodology on public data. It illustrates and aligns with the industry-wide 90–95% FPR figure but does NOT independently prove it. That figure rests on the BIS/LexisNexis citation above and refers to rule-based production AML systems, not an ML benchmark on Bitcoin data.
@@ -190,9 +215,20 @@ The study demonstrates FPR reduction methodology on public data. It illustrates 
 
 ## Git State
 
-**Remote:** `origin/main` (GitHub — repo exists and was last pushed before the AML study)  
-**Latest local commit:** `dd7e724` — "Add AML false-positive reduction study (Tier 1 flagship)"  
-**Status:** Commit is local only. **Push to GitHub is the next required action** to timestamp the work.
+**Remote:** `origin/main` → https://github.com/gucifer/financial-llm-governance.git  
+**Latest commits (PUSHED to GitHub 2026-06-25):**
+- `1be1c49` — "Add GNN baselines (GCN/GAT) and evaluation-pitfalls analysis"
+- `dd7e724` — "Add AML false-positive reduction study (Tier 1 flagship)"
+
+**Status:** ✅ Both commits pushed; flagship is timestamped on GitHub. The repo (Artifact 1) is now public and verifiable.
+
+**README honesty pass (2026-06-25 — committed locally, push pending):**
+- `README.md` — rewritten to stop overclaiming: Goal 3 now shows real measured results + honesty caveat; Goals 1/2/4 marked "reference design (scaffolded)"; PaySim→Elliptic fixed; AMLGentex removed (CUT); contributions table reframed (shipped/planned legend); Portkey PR #1691 kept as a real shipped contribution (user-confirmed).
+- `CLAUDE.md` — this file (status updates).
+- `aml-detection/README.md` — BibTeX URL fixed (aparikhdev→gucifer).
+- Untracked `aml-detection/data/` — Elliptic CSVs, **not for committing** (not currently matched by `.gitignore`).
+
+**Next actions: `git push origin main` to publish the honesty pass, then the arXiv preprint** (Artifact 2).
 
 ```bash
 cd "c:/Users/apari/OneDrive/Desktop/eb2_niw/financial-llm-governance"
@@ -208,20 +244,25 @@ git push origin main
 - [x] Generated architecture diagram (`docs/architecture.py` + PNG)
 - [x] Written comprehensive repo README.md
 - [x] **Tier 1 flagship AML study — complete:**
-  - [x] `aml-detection/src/` — all 5 modules written and tested
-  - [x] `aml-detection/notebooks/aml_fp_reduction_study.ipynb` — runs end-to-end, clean
-  - [x] `aml-detection/results/` — 12 artifacts generated (plots, NDJSON, CSVs, JSON)
-  - [x] `aml-detection/README.md` — populated with real measured results
-  - [x] Committed locally as `dd7e724`
+  - [x] `aml-detection/src/` — 6 modules written and tested (incl. `gnn_baseline.py`)
+  - [x] `aml-detection/notebooks/aml_fp_reduction_study.ipynb` — 6 stages, runs end-to-end clean (29 cells, 0 errors)
+  - [x] `aml-detection/results/` — 15+ artifacts (plots, NDJSON, CSVs, JSON)
+  - [x] `aml-detection/README.md` — real results + model-family comparison + evaluation-pitfalls tables
+  - [x] GNN baselines (GCN/GAT) and evaluation-pitfalls control added
+  - [x] Reference notebooks isolated to `notebooks/reference/` (git-ignored) for provenance
+  - [x] Committed locally as `dd7e724` + `1be1c49`
 
 ## What Is Next (in priority order)
 
-1. **Push to GitHub** — `git push origin main` — timestamps the commit; do this before the preprint
-2. **Write arXiv preprint** — 4–6 pages; content is already in the README and notebook; needs reformatting into paper structure; arXiv endorsement for cs.LG may be needed (start early)
-3. **Technical blog post** — Medium or Towards Data Science; cover AML study + Goal 1 gateway architecture pattern (no Prudential code); link repo and preprint
-4. **Evidence log** — start a spreadsheet tracking stars, forks, citations from day of push
-5. **Workshop paper submission** — same preprint reformatted; FinNLP@EMNLP or IEEE S&P financial-AI track; do not gate filing on acceptance
-6. **Fix petition body** — remove `[ACTION ITEM]` brackets; fix LexisNexis citation year (petition says "2023", correct source is 2018/BIS)
+1. ~~**Push to GitHub**~~ — ✅ DONE 2026-06-25 (`dd7e724` + `1be1c49` on origin/main)
+2. **Commit + push the uncommitted README honesty pass** (see Git State above) — do this first
+3. **Write arXiv preprint** ← THE MOST URGENT WRITE-UP ACTION — 4–6 pages; content is already in the README and notebook; needs reformatting into paper structure; arXiv endorsement for cs.LG may be needed (start early)
+4. **Technical blog post** — Medium or Towards Data Science; cover AML study + Goal 1 gateway architecture pattern (no Prudential code); link repo and preprint
+5. **Evidence log** — start a spreadsheet tracking stars, forks, citations from day of push
+6. **Workshop paper submission** — same preprint reformatted; FinNLP@EMNLP or IEEE S&P financial-AI track; do not gate filing on acceptance
+7. **Fix petition body** — remove `[ACTION ITEM]` brackets; fix LexisNexis citation year (petition says "2023", correct source is 2018/BIS)
+
+> **Scope note:** the flagship is now feature-complete (tabular baseline + hybrid + SHAP audit + observability + GNN baselines + pitfalls control). The GNN was the first and last addition beyond the roadmap's "one dataset, one baseline, one improvement" line — justified by reviewer expectation. **Resist further model additions**; remaining effort goes into write-up artifacts (preprint, blog), not more code.
 
 ---
 
@@ -242,6 +283,7 @@ git push origin main
 |----------|-----|---------|
 | Feedzai AML-Elliptic | https://github.com/feedzai/research-aml-elliptic | Tier 1 flagship baseline |
 | SHAP library | https://github.com/shap/shap | aml-detection/src/shap_audit.py |
+| PyTorch Geometric | https://github.com/pyg-team/pytorch_geometric | aml-detection/src/gnn_baseline.py (GCN/GAT) |
 | Portkey-AI Gateway (12.1k+ stars) | https://github.com/Portkey-AI/gateway | Tier 3 optional PR |
 | Langfuse | https://github.com/langfuse/langfuse | Tier 3 optional PR |
 | regulations.gov | https://www.regulations.gov | Tier 2 public comment |

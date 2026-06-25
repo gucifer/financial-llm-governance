@@ -175,7 +175,7 @@ The notebook runs all stages in order:
   note      = {Extended benchmark on the Elliptic Bitcoin dataset.
                Base dataset and supervised baseline: Lorenz, Silva & Aparício (2021),
                arXiv:2005.14635, \url{https://github.com/feedzai/research-aml-elliptic}},
-  url       = {https://github.com/aparikhdev/financial-llm-governance/tree/main/aml-detection}
+  url       = {https://github.com/gucifer/financial-llm-governance/tree/main/aml-detection}
 }
 ```
 

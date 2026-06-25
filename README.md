@@ -4,6 +4,12 @@
 
 ---
 
+## Repository Status
+
+The **Goal 3 AML false-positive-reduction study** ([`aml-detection/`](aml-detection/)) is the **implemented, reproducible core** of this repository — real measured results are reported below and the full methodology lives in the [study README](aml-detection/README.md). The **9-layer architecture and Goals 1, 2, and 4** are a **reference design**: the blueprint I architected from production experience, with implementation directories scaffolded for ongoing build-out. Each section is marked so nothing here reads as more finished than it is.
+
+---
+
 ## The National Problem
 
 The U.S. Treasury's Financial Services AI Risk Management Framework (February 2026) identifies uncontrolled AI deployment as a source of **systemic risk** to U.S. financial markets. The framework establishes 230 control objectives across four pillars — Governance, Risk Identification, Controls, and Incident Response — yet no production-grade open-source infrastructure exists to operationalize them end-to-end.
@@ -88,7 +94,7 @@ Policy query
 | 6 | Rate Limiter | pgvector (Reg Q&A path) | Regulatory Q&A requests are routed to the vector database storing embeddings of the FS AI RMF 230 control objectives, FINRA rulebook, SEC guidance, and FinCEN advisories. | Pillar 1 |
 | 7 | Rate Limiter | Hybrid AML Model (AML/KYC path) | AML/KYC transaction narratives are routed to the hybrid supervised + unsupervised anomaly detection pipeline. | Pillar 2 |
 | 8 | pgvector | Cross-Encoder Re-ranker | Retrieved regulatory document chunks are re-ranked to surface the most relevant passages, reducing hallucination risk from irrelevant context. | Pillar 3 |
-| 9 | Hybrid AML Model | False-Positive Reduction Engine | Initial AML risk scores pass through the false-positive reduction engine (target: **<10% false-positive rate** vs. industry baseline of **90–95%**). High-risk transactions carry a structured risk annotation into the LLM prompt. | Pillar 2 |
+| 9 | Hybrid AML Model | False-Positive Reduction Engine | Initial AML risk scores pass through the false-positive reduction engine — the cost-sensitive, recall-constrained threshold pipeline validated in [`aml-detection/`](aml-detection/) (measured FPR 0.0057 → 0.0003 on the Elliptic benchmark). High-risk transactions carry a structured risk annotation into the LLM prompt. | Pillar 2 |
 | 10 | Re-ranker / FP Engine | Azure OpenAI (GPT-4o) | Both paths converge. Grounded regulatory context (Reg Q&A) or risk-annotated transaction narrative (AML) is sent to the sovereign Azure OpenAI endpoint. No raw PII reaches this layer. | Pillar 3 |
 | 11 | Azure OpenAI | ECLIPSE · PII Re-check · NeMo Guardrails | LLM response fans into three parallel output validators: (1) ECLIPSE detects factually incorrect regulatory citations; (2) PII re-check ensures the model did not regenerate scrubbed data; (3) NeMo Guardrails enforces STR field schema compliance. | Pillar 3 |
 | 12 | Output Validation | Langfuse · SHAP/LIME · CloudWatch · SIEM | Validated responses are forwarded to the observability pipeline. Langfuse captures full LLM traces; SHAP/LIME generates per-decision feature attributions formatted as FINRA-compliant audit JSON; CloudWatch and SIEM ingest all events. | Pillar 4 · Pillar 1 |
@@ -99,7 +105,7 @@ Policy query
 
 ## Goal 1 — Sovereign AI Gateways for Regulatory Compliance
 
-**Directory:** `gateway/` · **Regulatory anchor:** FS AI RMF Pillar 1 (Governance) · Pillar 3 (Controls) · OWASP LLM Top 10 · NIST AI RMF Govern function
+**Directory:** `gateway/` · **Status:** reference design (directory scaffolded) + one shipped upstream contribution ([Portkey-AI/gateway PR #1691](https://github.com/Portkey-AI/gateway/pull/1691)) · **Regulatory anchor:** FS AI RMF Pillar 1 (Governance) · Pillar 3 (Controls) · OWASP LLM Top 10 · NIST AI RMF Govern function
 
 I designed a multi-layer sovereign gateway that enforces authentication, PII scrubbing, semantic caching, and rate limiting before any LLM request reaches the inference endpoint. The architecture ensures that no personally identifiable information — SSNs, ABA routing numbers, account numbers — ever crosses the cloud boundary.
 
@@ -116,7 +122,7 @@ I designed a multi-layer sovereign gateway that enforces authentication, PII scr
 
 ## Goal 2 — AI Risk Management & Observability Pipelines
 
-**Directory:** `observability/` · **Regulatory anchor:** FS AI RMF Pillar 4 (Incident Response) · FINRA Rule 4370 · SEC Rule 17a-4 · NIST AI RMF Measure function
+**Directory:** `observability/` · **Status:** reference design (directory scaffolded); the eval/observability layer — drift detection, calibration, temporal FPR monitoring — is implemented within [`aml-detection/`](aml-detection/) (`src/eval_harness.py`) · **Regulatory anchor:** FS AI RMF Pillar 4 (Incident Response) · FINRA Rule 4370 · SEC Rule 17a-4 · NIST AI RMF Measure function
 
 I designed an observability pipeline that captures full LLM traces, detects hallucinations in regulatory content, and generates FINRA-compliant audit trails for every model decision. Every response is traceable from raw input through inference to the final output validator.
 
@@ -126,37 +132,42 @@ I designed an observability pipeline that captures full LLM traces, detects hall
 - **CloudWatch + SIEM integration:** Metrics and security event ingestion for real-time operational alerting
 - **Automated eval trigger + feedback loop (step 14):** When human reviewers flag an incorrect output, a re-evaluation job reruns the ECLIPSE suite and updates the model card in MLflow
 
-**Open-source contribution:** [langfuse/langfuse](https://github.com/langfuse/langfuse) — financial hallucination eval suite; FS AI RMF Pillar 4 audit trail module
+**Planned open-source contribution:** [langfuse/langfuse](https://github.com/langfuse/langfuse) — financial hallucination eval suite; FS AI RMF Pillar 4 audit trail module
 
 ---
 
-## Goal 3 — AI-Powered Anomaly Detection for AML/KYC
+## Goal 3 — AI-Powered Anomaly Detection for AML/KYC  ✅ Implemented
 
-**Directory:** `aml-detection/` · **Regulatory anchor:** FinCEN Strategic Plan 2022–2025 · FS AI RMF Pillar 2 (Risk Identification) · FSOC 2023 Annual Report
+**Directory:** [`aml-detection/`](aml-detection/) · **Status: complete & reproducible** — this is the implemented core of the repository · **Regulatory anchor:** FinCEN Strategic Plan 2022–2025 · FS AI RMF Pillar 2 (Risk Identification) · FSOC 2023 Annual Report
 
-I designed a hybrid supervised/unsupervised anomaly detection pipeline targeting a **false-positive rate below 10%** against an industry baseline of 90–95%.
+A reproducible study that reduces the **false-positive rate (FPR)** of a supervised AML model through cost-sensitive training and recall-constrained threshold optimisation. Full methodology, dataset instructions, and the regulatory-alignment map are in the [study README](aml-detection/README.md).
 
-> The U.S. AML compliance industry generates false positives on 90–95% of flagged transactions, costing U.S. financial institutions approximately USD 25.3 billion annually in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019). This pipeline is designed to reduce that rate by an order of magnitude through hybrid ML with a dedicated false-positive reduction stage.
+> The U.S. AML compliance industry generates false positives on **90–95%** of flagged transactions, costing U.S. financial institutions an estimated **USD 25.3 billion annually** in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019).
 
-| | Industry Baseline | This Architecture |
-|---|---|---|
-| AML false-positive rate | 90–95% | Target: <10% |
-| Annual compliance cost (U.S.) | ~$25 billion | — |
-| Architecture entry point | — | Step 7 (Hybrid AML Model) |
-| FP reduction layer | — | Step 9 (FP Reduction Engine) |
+**What was built:** a three-part pipeline over the Feedzai supervised baseline on the public **Elliptic Bitcoin dataset** — (1) cost-sensitive XGBoost (`scale_pos_weight` = class ratio), (2) cross-validated threshold optimisation under a recall floor (≥ 0.65), (3) Isolation-Forest anomaly blending — plus SHAP → FINRA Rule 4370 audit JSON (covers Goal 4), a drift/calibration eval harness (covers Goal 2), GCN/GAT graph baselines, and an evaluation-pitfalls control.
 
-**Key components:**
-- **Hybrid AML model:** Ensemble of gradient boosting + isolation forest for transaction risk scoring; supervised labels from historical SAR filings, unsupervised detection for novel structuring patterns
-- **False-Positive Reduction Engine (step 9):** Secondary classifier that filters low-confidence alerts before LLM processing; only high-risk transactions with structured risk annotations reach Azure OpenAI
-- **Real-time transaction scoring:** Sub-second scoring pipeline with structured risk annotation injected into the LLM prompt as grounded context
+### Measured results (Elliptic dataset, temporal split, 5-run average)
 
-**Open-source contribution:** Extension of [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) with a U.S. regulatory benchmark on the PaySim synthetic dataset, measuring false-positive reduction against FS AI RMF Pillar 2 control objectives. Planned extension to [aidotse/AMLGentex](https://github.com/aidotse/AMLGentex) with U.S. SAR/BSA alert pattern module.
+| Metric | Baseline XGBoost (Feedzai) | Hybrid FP-Optimised | Δ |
+|--------|----------------------------|---------------------|---|
+| **False-Positive Rate** | **0.0057** | **0.0003** | **−94.7%** |
+| Recall (illicit) | 0.7239 | 0.6726 | −0.05 (floor ≥ 0.65 held) |
+| Precision | 0.8981 | 0.9945 | +0.10 |
+| F1 (illicit) | 0.8016 | 0.8024 | +0.001 |
+| AUC-ROC | 0.9432 | 0.8933 | −0.05 |
+
+- **Model-family check:** gradient-boosted trees beat vanilla GNNs on Elliptic (GCN F1 0.64, GAT F1 0.38) — graph structure alone does **not** cut FPR; the cost-sensitive threshold pipeline does.
+- **Evaluation-pitfalls control:** random splitting leaks future time steps and inflates F1 from 0.80 → 0.94 — which is why public Elliptic notebooks report F1 > 0.93. Every number above uses the honest temporal split (train steps 1–34, test 35–49).
+
+**Scope & honesty caveat:** this study demonstrates FPR-reduction *methodology* on a public benchmark. The 94.7% relative FPR reduction is an ML-layer result on the Elliptic dataset; it **illustrates and aligns with** — but does **not** independently prove — the industry-wide 90–95% figure, which refers to alert-level false positives in rule-based production AML systems and rests on the BIS/LexisNexis citation above.
+
+**Open-source artifact:** a U.S.-regulatory-aligned extension of [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) on the public Elliptic dataset, mapping the FPR-reduction methodology to FS AI RMF Pillar 2 control objectives. Source modules, an end-to-end notebook, and 15+ result artifacts are in [`aml-detection/`](aml-detection/).
 
 ---
 
 ## Goal 4 — Agentic AI for Regulatory Document Automation
 
-**Directory:** `xai-compliance/` · **Regulatory anchor:** FINRA Rule 4370 · SEC Rule 17a-4 · FS AI RMF Pillar 1 (Governance) · FinCEN SAR requirements
+**Directory:** `xai-compliance/` · **Status:** reference design (directory scaffolded); the SHAP → FINRA Rule 4370 / SEC Rule 17a-4 audit-JSON generator is implemented within [`aml-detection/`](aml-detection/) (`src/shap_audit.py`, 2,713 audit records in `results/audit_log.ndjson`) · **Regulatory anchor:** FINRA Rule 4370 · SEC Rule 17a-4 · FS AI RMF Pillar 1 (Governance) · FinCEN SAR requirements
 
 I designed an explainability and document automation layer that generates FINRA-compliant audit JSON for every AML decision and produces Suspicious Transaction Report (STR) content auditable under FinCEN XML schema requirements.
 
@@ -166,7 +177,7 @@ I designed an explainability and document automation layer that generates FINRA-
 - **NeMo Guardrails (step 11):** Enforces STR field schema compliance on LLM output before delivery — prevents structurally invalid reports from reaching compliance officers
 - **MLflow model registry:** Model versioning, model cards, and governance lifecycle tracking; eval trigger (step 14) writes results back to the model card on every re-evaluation run
 
-**Open-source contribution:** Python implementation of the XAI-Comply framework (Springer ICFT 2025) as an open-source package — the published paper's Java/Spring system is closed-source; no Python equivalent exists for U.S. compliance workflows.
+**Planned open-source contribution:** Python implementation of the XAI-Comply framework (Springer ICFT 2025) as an open-source package — the published paper's Java/Spring system is closed-source; no Python equivalent exists for U.S. compliance workflows.
 
 ---
 
@@ -187,12 +198,13 @@ This reference architecture reflects the sovereign AI infrastructure layer I wor
 
 ## Open-Source Contributions
 
-| Repository | Stars | Contribution |
-|------------|-------|--------------|
-| [Portkey-AI/gateway](https://github.com/Portkey-AI/gateway) | 12.1k | [PR #1691](https://github.com/Portkey-AI/gateway/pull/1691): Cloudflare Workers AI provider migration. Planned: FS AI RMF guardrail plugin, U.S. financial PII patterns (ABA/ACH/ITIN/EIN), FINRA/SEC audit log schema (Rule 4370 / 17a-4), FinCEN SAR/STR output validator |
-| [langfuse/langfuse](https://github.com/langfuse/langfuse) | — | Financial hallucination eval suite; FS AI RMF Pillar 4 audit trail module |
-| [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) | — | U.S. regulatory benchmark extension on PaySim dataset; false-positive reduction measurement mapped to FS AI RMF Pillar 2 |
-| [aidotse/AMLGentex](https://github.com/aidotse/AMLGentex) | — | U.S. SAR/BSA alert pattern module (FinCEN structuring rules, BSA reporting thresholds) |
+Status legend: **✅ shipped/implemented** · **Planned** = on the roadmap, not yet submitted.
+
+| Repository | Stars | Status | Contribution |
+|------------|-------|--------|--------------|
+| [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) | — | ✅ Implemented | U.S.-regulatory FPR-reduction extension on the public Elliptic dataset, mapped to FS AI RMF Pillar 2 — see [`aml-detection/`](aml-detection/) |
+| [Portkey-AI/gateway](https://github.com/Portkey-AI/gateway) | 12.1k | ✅ Shipped | [PR #1691](https://github.com/Portkey-AI/gateway/pull/1691): Cloudflare Workers AI provider migration. *Planned:* FS AI RMF guardrail plugin, U.S. financial PII patterns (ABA/ACH/ITIN/EIN), FINRA/SEC audit log schema (Rule 4370 / 17a-4) |
+| [langfuse/langfuse](https://github.com/langfuse/langfuse) | — | Planned | Financial hallucination eval suite; FS AI RMF Pillar 4 audit trail module |
 
 ---
 
@@ -222,6 +234,10 @@ python architecture.py
 # Output: docs/financial_llm_governance_architecture.png
 ```
 
+### Run the AML Study (Goal 3)
+
+The implemented flagship study has its own setup and run instructions — install `aml-detection/requirements.txt`, place the public Elliptic CSVs, and run the notebook. See the [study README](aml-detection/README.md) for full steps.
+
 ### Repository Structure
 
 ```
@@ -230,10 +246,16 @@ financial-llm-governance/
 ├── docs/
 │   ├── architecture.py                               # Diagram source (mingrammer/diagrams v0.25.1)
 │   └── financial_llm_governance_architecture.png     # Generated 9-layer architecture diagram
-├── gateway/                                          # Goal 1: Sovereign AI Gateways
-├── observability/                                    # Goal 2: Hallucination detection, eval harnesses
-├── aml-detection/                                    # Goal 3: Hybrid AML pipeline
-└── xai-compliance/                                   # Goal 4: SHAP/LIME → FINRA audit JSON
+├── aml-detection/                  # Goal 3: IMPLEMENTED — AML FPR-reduction study
+│   ├── README.md                   #   full methodology, results, regulatory map
+│   ├── requirements.txt
+│   ├── src/                        #   6 modules: data_loader, baseline, hybrid_pipeline,
+│   │                              #   shap_audit, eval_harness, gnn_baseline
+│   ├── notebooks/                  #   aml_fp_reduction_study.ipynb (end-to-end)
+│   └── results/                    #   15+ artifacts: plots, audit NDJSON, CSVs, full_results.json
+├── gateway/                        # Goal 1: reference design (scaffolded)
+├── observability/                  # Goal 2: reference design (scaffolded; eval harness lives in aml-detection)
+└── xai-compliance/                 # Goal 4: reference design (scaffolded; SHAP audit lives in aml-detection)
 ```
 
 ---
