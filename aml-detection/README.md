@@ -64,18 +64,16 @@ unzip elliptic-data-set.zip -d data/elliptic/dataset/
 
 ## Results
 
-*Run the study notebook to populate this table with measured values.*
-
 | Metric | Baseline XGBoost (Feedzai) | Hybrid FP-Optimised | Δ |
 |--------|---------------------------|---------------------|---|
 | **False-Positive Rate** | **0.0057** | **0.0003** | **−0.0054 (−94.7%)** |
-| Recall (illicit) | 0.7239 | 0.6726 | −0.0513 |
-| Precision | 0.8981 | 0.9945 | +0.0964 |
-| F1 (illicit) | 0.8016 | 0.8024 | +0.0008 |
+| Recall (illicit) | 0.7239 | 0.6726 ± 0.0095 | −0.0513 |
+| Precision | 0.8981 | 0.9945 ± 0.0001 | +0.0964 |
+| F1 (illicit) | 0.8016 | 0.8024 ± 0.0068 | +0.0008 |
 | AUC-ROC | 0.9432 | 0.8933 | −0.0499 |
 | Decision threshold | 0.5 (default) | 0.8324 (CV-optimised) | — |
 
-Recall constraint: ≥ 0.65 (satisfied: 0.6726). The recall floor operationalises the compliance team's investigation capacity — miss at most 35% of illicit transactions while minimising false alarms on licit ones. Results are averaged over 5 independent runs on the Elliptic test set (time steps 35–49).
+Recall constraint: ≥ 0.65 (satisfied: 0.6726). Results are 5-run means ± 95% CI (hybrid only; baseline XGBoost is deterministic across seeds at 4 d.p.). Hybrid recall SD = 0.0109, driven by the cross-validated threshold search. Per-run metrics in `results/full_results.json`.
 
 > **Regulatory interpretation:** A reduction in FPR directly translates to fewer compliance analyst-hours spent investigating licit transactions. At the U.S. industry scale ($25.3B/year, 90–95% FPR baseline), a 10-percentage-point FPR reduction represents an estimated $2.5–3B annual reduction in misdirected compliance expenditure. This study demonstrates the methodology on a public benchmark; the 94.7% relative FPR reduction on the Elliptic dataset illustrates the technique's potential within the ML layer of a production AML pipeline.
 
@@ -87,10 +85,14 @@ The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neur
 |-------|-----|--------|-----------|--------------|---------|
 | XGBoost baseline | 0.0057 | 0.7239 | 0.8981 | 0.8016 | 0.9432 |
 | **Hybrid FP-optimised** | **0.0003** | 0.6726 | 0.9945 | 0.8024 | 0.8933 |
-| GCN | 0.0206 | 0.6104 | 0.6735 | 0.6403 | 0.8787 |
-| GAT | 0.1526 | 0.7516 | 0.2549 | 0.3807 | 0.8851 |
+| GCN (default threshold) | 0.0206 | 0.6104 | 0.6735 | 0.6403 | 0.8787 |
+| GAT (default threshold) | 0.1526 | 0.7516 | 0.2549 | 0.3807 | 0.8851 |
+| GCN (tuned, recall-floor†) | 0.0017 | 0.2108 | 0.8989 | 0.3412 | 0.8837 |
+| GAT (tuned, recall-floor†) | 0.0130 | 0.2545 | 0.5863 | 0.3529 | 0.8893 |
 
-**Finding:** On Elliptic's hand-engineered features, gradient-boosted trees clearly outperform vanilla GNNs (GCN F1 0.64, GAT F1 0.38), consistent with Weber (2019) and Feedzai. Graph structure alone does **not** reduce the false-positive rate — the GCN's FPR (0.0206) is ~3.6× the tree baseline and ~70× the hybrid. The FPR reduction comes from the cost-sensitive threshold pipeline, not from the model family.
+*† Recall-floor threshold search (target ≥ 0.65) applied but floor not achieved. GCN: hidden=256, 300 epochs, lr=0.005; GAT: hidden=32, heads=4, 200 epochs. 3 runs each.*
+
+**Finding:** On Elliptic's hand-engineered features, trees outperform vanilla GNNs (GCN F1 0.64, GAT F1 0.38). Tuning GNNs and applying the recall-floor threshold search reduces FPR (GCN: 0.021→0.0017; GAT: 0.153→0.013), but recall collapses to 0.21/0.25 — far below the 0.65 floor. The XGBoost hybrid achieves FPR=0.0003 at recall=0.67 (floor met). GNN probability scores do not support simultaneous FPR reduction and recall ≥ 0.65; the FPR reduction comes from the cost-sensitive threshold pipeline, not from the model family.
 
 ### Common evaluation pitfalls
 
@@ -103,6 +105,19 @@ Public Elliptic notebooks routinely report illicit-class F1 > 0.93. Using our **
 
 Random splitting leaks future time steps into training and averages out the documented post-timestep-43 performance cliff, inflating F1 from 0.80 to 0.94 — exactly the range seen in notebooks that random-split. The temporal results reported throughout this study are therefore the honest, harder, and operationally correct numbers.
 
+### External validity: PaySim mobile-money dataset
+
+To test cross-domain generalization, we replicate the protocol on PaySim (Lopez-Rojas et al., 2016) — a synthetic mobile-money simulator (6.36M transactions, 0.13% fraud prevalence) with balance-sheet features instead of anonymized graph features. Same temporal split (~70/30), same XGBoost baseline, same hybrid pipeline.
+
+| Dataset | Model | FPR | Recall | F1 (illicit) | AUC |
+|---------|-------|-----|--------|--------------|-----|
+| Elliptic | Baseline | 0.0057 | 0.7239 | 0.8016 | 0.9432 |
+| Elliptic | Hybrid | 0.0003 | 0.6726 | 0.8024 | 0.8933 |
+| PaySim | Baseline | 0.0 | 0.7768 | 0.8727 | 0.9913 |
+| PaySim | Hybrid | 0.0 | 0.6888 | 0.8137 | 0.9999 |
+
+**Finding:** PaySim baseline already achieves FPR = 0.0 at the default threshold — mobile-money features are more separable than Bitcoin graph features. Consequently the hybrid's FP-reduction component provides no marginal benefit; the recall-floor constraint slightly compresses recall (0.78→0.69) without any FPR gain. **The threshold optimization pipeline adds value proportional to baseline FPR.** Where baseline FPR ≈ 0, use plain XGBoost. Where baseline FPR is non-trivial (as in Elliptic), the hybrid cuts it by 94.7%.
+
 ---
 
 ## Repository Structure
@@ -111,8 +126,12 @@ Random splitting leaks future time steps into training and averages out the docu
 aml-detection/
 ├── README.md                    # this file
 ├── requirements.txt
+├── compute_sd_ci.py             # 5-seed SD/CI computation for baseline + hybrid
+├── tune_gnn.py                  # tuned GCN/GAT hyperparams, 3 runs each
+├── paysim_experiment.py         # PaySim external validity replication
 ├── data/
-│   └── elliptic/dataset/        # place Elliptic CSVs here (not committed)
+│   ├── elliptic/dataset/        # place Elliptic CSVs here (not committed)
+│   └── paysim/                  # PaySim parquet files (not committed)
 ├── src/
 │   ├── data_loader.py           # dataset loading + temporal split
 │   ├── baseline.py              # Feedzai XGBoost baseline + FPR metrics
@@ -122,7 +141,8 @@ aml-detection/
 │   └── gnn_baseline.py          # GCN / GAT graph baselines (same temporal protocol)
 ├── notebooks/
 │   └── aml_fp_reduction_study.ipynb   # complete study (run this)
-└── results/                     # generated outputs (plots, audit log, CSVs)
+└── results/
+    └── full_results.json        # all metrics: baseline, hybrid, GNNs, PaySim, SD/CI
 ```
 
 ---
