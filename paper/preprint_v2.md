@@ -129,7 +129,7 @@ The hybrid cuts FPR by 94.7% relative while holding recall above the 0.65 floor 
 
 Vanilla GCN and GAT underperform both tree models on FPR and F1. GAT's FPR (0.1526) is roughly 500× the hybrid's (0.0003) — more than two orders of magnitude — driven by low precision (0.25) despite competitive recall, i.e., it flags far too much.
 
-Applying the same recall-floor threshold search to tuned GNNs (GCN hidden=256, 300 epochs; GAT hidden=32, heads=4, 200 epochs; 3 runs each) achieves lower FPR than vanilla (GCN: 0.0017 vs. 0.0206; GAT: 0.0130 vs. 0.1526), but at the cost of recall collapsing to 0.21 and 0.25 respectively — far below the 0.65 floor. The recall constraint cannot be simultaneously satisfied with FPR reduction: GNN probability scores are not well-calibrated enough to find a threshold that jointly achieves both objectives. The XGBoost hybrid achieves FPR = 0.0003 while holding recall = 0.67 (floor met). This is the operationally decisive gap. Graph structure alone does not reduce FPR at a usable recall on Elliptic's engineered features; the cost-sensitive threshold pipeline does. We bound this to static GNNs (cf. EvolveGCN; Pareja et al., 2020).
+Applying the same recall-floor threshold search to tuned GNNs (GCN hidden=256, 300 epochs; GAT hidden=32, heads=4, 200 epochs; 3 runs each) achieves lower FPR than vanilla (GCN: 0.0017 vs. 0.0206; GAT: 0.0130 vs. 0.1526), but at the cost of recall collapsing to 0.21 and 0.25 respectively — far below the 0.65 floor. The recall constraint cannot be simultaneously satisfied with FPR reduction: GNN probability scores are not well-calibrated enough to find a threshold that jointly achieves both objectives. The XGBoost hybrid achieves FPR = 0.0003 while holding recall = 0.67 (floor met). Graph structure alone does not reduce FPR at a usable recall on Elliptic's engineered features; the cost-sensitive threshold pipeline does. We bound this to static GNNs (cf. EvolveGCN; Pareja et al., 2020).
 
 ### 5.4 Costs of threshold-shifting: calibration and drift
 
@@ -165,15 +165,15 @@ To assess whether the pipeline generalizes beyond Bitcoin, we replicate the stud
 
 The XGBoost baseline achieves FPR = 0.0 on PaySim at the default threshold — mobile-money balance-sheet features are sufficiently separable that no threshold adjustment is needed to eliminate false positives. Consequently, the hybrid's FP-reduction component provides no marginal benefit: with baseline FPR already at zero, the recall-floor constraint slightly over-compresses recall (0.7768 → 0.6888, −0.09) without any FPR gain. This is the expected behavior of threshold optimization under a recall floor when the default operating point is already Pareto-optimal on FPR.
 
-The cross-dataset comparison offers a generalizable lesson: cost-sensitive threshold optimization adds value proportional to the baseline FPR. On Elliptic (baseline FPR = 0.57%), it reduces FPR by 94.7%. On PaySim (baseline FPR ≈ 0%), the mechanism is inert and pure XGBoost is the better choice. A practitioner should measure baseline FPR before applying the recall-floor pipeline; if baseline FPR is already near zero, the additional CV threshold search adds variance without benefit. The XGBoost tabular component generalizes to mobile-money data (F1 0.87 on PaySim vs. 0.80 on Elliptic), partially addressing the single-dataset limitation.
+Cost-sensitive threshold optimization adds value proportional to the baseline FPR. On Elliptic (baseline FPR = 0.57%), it reduces FPR by 94.7%. On PaySim (baseline FPR ≈ 0%), the mechanism is inert and pure XGBoost is the better choice. A practitioner should measure baseline FPR before applying the recall-floor pipeline; if baseline FPR is already near zero, the additional CV threshold search adds variance without benefit. The XGBoost tabular component generalizes to mobile-money data (F1 0.87 on PaySim vs. 0.80 on Elliptic), partially addressing the single-dataset limitation.
 
 ---
 
 ## 6. Discussion
 
-The most transferable lesson is methodological: on a temporal dataset, the split and the objective govern the credibility of a result at least as much as the model. Random-split numbers should not circulate as state of the art; reporting FPR under a temporal split at a stated recall floor is a small protocol change with a large honesty gain.
+On a temporal dataset, the split and the objective govern result credibility at least as much as the model. Random-split numbers do not reflect deployment performance; a temporal split with an explicit recall floor changes little procedurally but a great deal in what gets reported.
 
-Within an honest protocol, the practical lever for AML cost reduction is a cost-sensitive decision threshold under a recall constraint, not a more expressive model class. The FPR reduction is real but bought with controlled recall, AUC, and calibration costs, all reported. The graph-versus-tree result cautions against assuming architectural sophistication transfers to operational metrics; the literature's temporal-GNN gains (Pareja et al., 2020) require modeling time explicitly.
+Within an honest protocol, AML cost reduction comes from the decision threshold under a recall constraint, not from model expressiveness. The FPR reduction is real but bought with controlled recall, AUC, and calibration costs, all reported. The graph-versus-tree result cautions against assuming architectural sophistication transfers to operational metrics; the literature's temporal-GNN gains (Pareja et al., 2020) require modeling time explicitly.
 
 For regulatory AI, the results map to the U.S. Treasury Financial Services AI Risk Management Framework emphasis on measurable performance and to FinCEN's AML-modernization agenda; the SHAP-to-audit-record layer addresses explainability and recordkeeping expectations in FINRA Rule 4370 and SEC Rule 17a-4.
 
@@ -187,7 +187,7 @@ For regulatory AI, the results map to the U.S. Treasury Financial Services AI Ri
 
 ## 8. Conclusion
 
-The choice of split and objective, not model expressiveness, governs the credibility of AML benchmark results on Elliptic. Random splitting inflates illicit-class F1 by 14 points; under an honest temporal split, a cost-sensitive threshold-optimized tree ensemble reduces FPR by 94.7% relative at a stated recall floor, with its recall, AUC, and calibration costs reported in full, while vanilla graph baselines underperform. We offer the evaluation protocol, not the model, as the contribution.
+The choice of split and objective, not model expressiveness, governs the credibility of AML benchmark results on Elliptic. Random splitting inflates illicit-class F1 by 14 points; under an honest temporal split, a cost-sensitive threshold-optimized tree ensemble reduces FPR by 94.7% relative at a stated recall floor, with its recall, AUC, and calibration costs reported in full, while vanilla graph baselines underperform. The contribution is the evaluation protocol.
 
 **Reproducibility.** Code, seeds, and the full results set are available at the companion repository.
 
