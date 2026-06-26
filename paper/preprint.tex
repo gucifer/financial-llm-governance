@@ -238,13 +238,13 @@ Dataset & Model & FPR & Recall & F1 (illicit) & AUC \\
 \midrule
 Elliptic & Baseline & 0.0057 & 0.7239 & 0.8016 & 0.9432 \\
 Elliptic & Hybrid   & 0.0003 & 0.6726 & 0.8024 & 0.8933 \\
-PaySim   & Baseline & 0.0    & 0.7768 & 0.8727 & 0.9913 \\
-PaySim   & Hybrid   & 0.0    & 0.6888 & 0.8137 & 0.9999 \\
+PaySim   & Baseline & $<$0.0001 & 0.7768 & 0.8727 & 0.9913 \\
+PaySim   & Hybrid   & $<$0.0001 & 0.6888 & 0.8137 & 0.9999 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The XGBoost baseline achieves FPR $= 0.0$ on PaySim at the default threshold --- mobile-money balance-sheet features are sufficiently separable that no threshold adjustment is needed to eliminate false positives. Consequently, the hybrid's FP-reduction component provides no marginal benefit: with baseline FPR already at zero, the recall-floor constraint slightly over-compresses recall ($0.7768 \rightarrow 0.6888$, $-0.09$) without any FPR gain. This is the expected behavior of threshold optimization under a recall floor when the default operating point is already Pareto-optimal on FPR.
+The XGBoost baseline achieves FPR $< 0.0001$ on PaySim at the default threshold (9 false positives on 298,161 licit test transactions) --- mobile-money balance-sheet features are sufficiently separable that threshold adjustment adds no meaningful FPR benefit. Consequently, the hybrid's FP-reduction component provides no marginal benefit: with baseline FPR already at zero, the recall-floor constraint slightly over-compresses recall ($0.7768 \rightarrow 0.6888$, $-0.09$) without any FPR gain. This is the expected behavior of threshold optimization under a recall floor when the default operating point is already Pareto-optimal on FPR.
 
 Cost-sensitive threshold optimization adds value proportional to the baseline FPR. On Elliptic (baseline FPR $= 0.57\%$), it reduces FPR by 94.7\%. On PaySim (baseline FPR $\approx 0\%$), the mechanism is inert and pure XGBoost is the better choice. A practitioner should measure baseline FPR before applying the recall-floor pipeline; if baseline FPR is already near zero, the additional CV threshold search adds variance without benefit. The XGBoost tabular component generalizes to mobile-money data (F1 0.87 on PaySim vs.\ 0.80 on Elliptic), partially addressing the single-dataset limitation.
 
@@ -254,7 +254,7 @@ On a temporal dataset, the split and the objective govern result credibility at 
 
 Within an honest protocol, AML cost reduction comes from the decision threshold under a recall constraint, not from model expressiveness. The FPR reduction is real but bought with controlled recall, AUC, and calibration costs, all reported. The graph-versus-tree result cautions against assuming architectural sophistication transfers to operational metrics; the literature's temporal-GNN gains (Pareja et al., 2020) require modeling time explicitly.
 
-For regulatory AI, the results map to the U.S. Treasury Financial Services AI Risk Management Framework emphasis on measurable performance and to FinCEN's AML-modernization agenda; the SHAP-to-audit-record layer addresses explainability and recordkeeping expectations in FINRA Rule 4370 and SEC Rule 17a-4.
+For regulatory AI, the results map to the U.S. Treasury Financial Services AI Risk Management Framework (FS AI RMF, Feb.\ 2026) emphasis on measurable performance and to FinCEN's AML-modernization strategic objectives; the SHAP-to-audit-record layer addresses explainability and recordkeeping expectations in FINRA Rule 4370 and SEC Rule 17a-4.
 
 \section{Limitations}
 
