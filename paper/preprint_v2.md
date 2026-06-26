@@ -10,7 +10,7 @@ Independent Research
 
 ## Abstract
 
-Benchmark results on the public Elliptic Bitcoin dataset (Weber et al., 2019) are frequently reported under random train/test splits and optimized for F1 or accuracy — two habits that misrepresent how an anti–money-laundering (AML) model would actually perform in deployment. We make evaluation honesty the primary contribution. Using one controlled protocol, we show that random splitting inflates illicit-class F1 from 0.80 (temporal, honest) to 0.94 (random, leaky) and AUC to 0.996, reproducing the optimistic magnitudes that circulate in public Elliptic notebooks, while the temporal split — where a model trained on the past scores the future — yields materially lower numbers. Within that honest protocol we then target the operationally relevant objective: minimizing the false-positive rate (FPR) subject to a fixed recall floor, motivated by supervisory estimates of 90–95% FPR and ~USD 25.3 billion in annual U.S. AML compliance cost (Coelho et al., 2019). A cost-sensitive, cross-validated threshold-optimized gradient-boosted tree ensemble with a blended isolation-forest signal reduces FPR from 0.0057 to 0.0003 (−94.7% relative) at recall 0.67 and precision 0.99 — an honest operating point, not a state-of-the-art claim, with the recall, AUC, and calibration costs of threshold-shifting reported in full. Vanilla graph baselines (GCN, GAT) under the same protocol underperform the trees, consistent with the dataset's originating paper. We do not claim to independently prove the 90–95% industry figure. Per-prediction SHAP attributions are exported to audit records aligned with FINRA Rule 4370 and SEC Rule 17a-4.
+Benchmark results on the public Elliptic Bitcoin dataset (Weber et al., 2019) are frequently reported under random train/test splits optimized for F1 — two habits that misrepresent deployment performance. We make evaluation honesty the primary contribution. Using one controlled protocol, we show that random splitting inflates illicit-class F1 from 0.80 (temporal, honest) to 0.94 (random, leaky) and AUC to 0.996, reproducing the optimistic magnitudes in public Elliptic notebooks. Within that honest protocol we target the operationally relevant objective: minimizing false-positive rate (FPR) subject to a fixed recall floor, motivated by supervisory estimates of 90–95% FPR and ~USD 25.3 billion in annual U.S. AML compliance cost (Coelho et al., 2019). A cost-sensitive, cross-validated threshold-optimized gradient-boosted tree ensemble with a blended isolation-forest signal reduces FPR from 0.0057 to 0.0003 (−94.7% relative) at recall 0.67 and precision 0.99 — an honest operating point, not a state-of-the-art claim, with the recall, AUC, and calibration costs of threshold-shifting reported in full. Vanilla graph baselines (GCN, GAT) underperform the trees under the same protocol, consistent with the originating paper. We do not claim to independently prove the 90–95% industry figure.
 
 ---
 
@@ -47,7 +47,7 @@ We are explicit about scope. The FPR-reduction mechanism — threshold optimizat
 
 ## 3. Data
 
-Elliptic (Weber et al., 2019) comprises 203,769 Bitcoin transactions over 49 time steps, each with 166 features (94 local, 72 aggregated). About 21% of nodes are labeled; we use the labeled subset. Edges encode Bitcoin flows (≈470k undirected edges) for the graph models. Our primary protocol is the temporal split (train steps 1–34, test 35–49). A distinguishing property of this dataset, central to our threshold analysis, is severe distributional shift: 164 of 165 features (99.4%) differ significantly between the training and test periods (two-sample test; see §5.4), so a decision threshold fit on the training period does not transfer naively to the test period.
+Elliptic (Weber et al., 2019) comprises 203,769 Bitcoin transactions over 49 time steps, each with 166 features (94 local, 72 aggregated). About 21% of nodes are labeled; we use the labeled subset. Edges encode Bitcoin flows (≈470k undirected edges) for the graph models. Our primary protocol is the temporal split (train steps 1–34, test 35–49). The test period (steps 35–49) contains 16,670 labeled transactions: 15,587 licit and 1,083 illicit. A distinguishing property of this dataset, central to our threshold analysis, is severe distributional shift: 164 of 165 features (99.4%) differ significantly between the training and test periods (two-sample test; see §5.4), so a decision threshold fit on the training period does not transfer naively to the test period.
 
 ---
 
@@ -72,7 +72,7 @@ Elliptic (Weber et al., 2019) comprises 203,769 Bitcoin transactions over 49 tim
 
 ## 5. Results
 
-### 5.1 The headline: temporal leakage inflates reported performance (SQ3)
+### 5.1 The headline: temporal leakage inflates reported performance
 
 **Table 1. Identical XGBoost, split varied.**
 
@@ -83,7 +83,7 @@ Elliptic (Weber et al., 2019) comprises 203,769 Bitcoin transactions over 49 tim
 
 With hyperparameters held fixed, random splitting inflates illicit-class F1 by 14 points (0.80 → 0.94) and AUC to 0.996. The inflated numbers match the magnitudes commonly reported for Elliptic in public tutorials and Kaggle kernels; we therefore attribute a substantial share of that optimism to temporal leakage rather than model quality. (We report this from our own controlled reproduction rather than attributing it to any single external notebook.)
 
-### 5.2 FPR reduction at a recall floor (SQ1)
+### 5.2 FPR reduction at a recall floor
 
 **Table 2. Hybrid vs. baseline, temporal split (5-run mean ± 95% CI).**
 
@@ -98,7 +98,10 @@ With hyperparameters held fixed, random splitting inflates illicit-class F1 by 1
 
 *Baseline metrics are identical across all 5 seeds (XGBoost without column/row subsampling is deterministic at 4 d.p. on a fixed dataset). Hybrid 95% CI = 1.96 × SD / √5; metrics with CI < 0.0001 shown without interval. Per-run values and SD are in `results/full_results.json`.*
 
-The hybrid cuts FPR by 94.7% relative while holding recall above the 0.65 floor and lifting precision to 0.99. In absolute terms the hybrid produces a mean of 4 false positives versus the baseline's 89 on the test period. The main source of run-to-run variance is the cross-validated threshold search (different CV folds per seed), producing a recall SD of 0.0109 (95% CI ± 0.0095) — modest variability that does not alter the directional result. The recall and AUC reductions are the transparent cost of moving the operating point toward precision.
+The hybrid cuts FPR by 94.7% relative while holding recall above the 0.65 floor and lifting precision to 0.99. In absolute terms the hybrid produces a mean of 4 false positives versus the baseline's 89 on the 16,670-transaction test period (15,587 licit, 1,083 illicit). The main source of run-to-run variance is the cross-validated threshold search (different CV folds per seed), producing a recall SD of 0.0109 (95% CI ± 0.0095) — modest variability that does not alter the directional result. The recall and AUC reductions are the transparent cost of moving the operating point toward precision.
+
+![FPR-Recall operating curve](../aml-detection/results/operating_curve.png)
+*Figure 7. FPR–Recall operating curve (Elliptic, temporal split). X-axis: false-positive rate; Y-axis: recall (TPR). The hybrid curve (blue) lies above and left of the baseline curve (red) — higher recall at every FPR level — a direct consequence of cost-sensitive weighting. The hybrid operating point (diamond, FPR=0.0003, Recall=0.67) sits in the upper-left corner; the baseline operating point (circle, FPR=0.0057, Recall=0.72) is to its right. GNN default and tuned operating points are overlaid as triangular markers; tuned GNNs achieve lower FPR at the cost of recall far below the 0.65 floor.*
 
 ![Per-time-step FPR and recall, baseline vs hybrid](../aml-detection/results/temporal_performance_comparison.png)
 *Figure 2. Per-time-step behavior across the test window (steps 35–49). Left: the hybrid (blue) suppresses the baseline's (red) FPR spikes at steps 44, 46, and 49 nearly to zero. Right: recall for both models, with the 0.65 floor (dashed); both degrade sharply after step 42, illustrating that the floor is a mean constraint, not a per-step guarantee — a limitation we report rather than hide.*
@@ -106,7 +109,7 @@ The hybrid cuts FPR by 94.7% relative while holding recall above the 0.65 floor 
 ![Per-time-step FPR reduction](../aml-detection/results/fpr_reduction_per_timestep.png)
 *Figure 3. Per-time-step FPR reduction (baseline − hybrid; positive = improvement). The reduction is largest exactly at the baseline's worst steps (44, 46, 49), where false positives are most costly.*
 
-### 5.3 Graph versus tree (SQ2)
+### 5.3 Graph versus tree
 
 **Table 3. Model-family comparison, temporal split.**
 
@@ -149,7 +152,7 @@ This degradation is a direct consequence of the 99.4% feature drift between trai
 
 ### 5.5 External validity: PaySim mobile-money dataset
 
-To assess whether the pipeline generalizes beyond Bitcoin, we replicate the study protocol on PaySim (Lopez-Rojas et al., 2016), a synthetic mobile-money simulator used as an AML benchmark. PaySim differs from Elliptic in domain (mobile money vs. Bitcoin), feature structure (9 balance-sheet columns vs. 165 anonymized features), class imbalance (0.13% fraud vs. ~2% illicit on the labeled set), and scale (6.36M transactions vs. 203,769). We apply an identical temporal split (train steps 1–500, test 501–744, ~70/30 ratio), XGBoost baseline (5 runs), and the same hybrid pipeline (recall floor 0.65, isolation-forest blend weight 0.15).
+To assess whether the pipeline generalizes beyond Bitcoin, we replicate the study protocol on PaySim (Lopez-Rojas et al., 2016), a synthetic mobile-money simulator used as an AML benchmark. PaySim differs from Elliptic in domain (mobile money vs. Bitcoin), feature structure (9 balance-sheet columns vs. 165 anonymized features), class imbalance (0.13% fraud vs. ~2% illicit on the labeled set), and scale (6.36M transactions vs. 203,769). We apply an identical temporal split (train steps 1–500, test 501–744, ~70/30 ratio; each PaySim step corresponds to one simulated day in the Lopez-Rojas simulator), XGBoost baseline (5 runs), and the same hybrid pipeline (recall floor 0.65, isolation-forest blend weight 0.15).
 
 **Table 5. Cross-dataset generalization (PaySim vs. Elliptic).**
 
@@ -178,7 +181,7 @@ For regulatory AI, the results map to the U.S. Treasury Financial Services AI Ri
 
 ## 7. Limitations
 
-(a) **Single primary dataset**; external validity to production banking data is not fully established (Elliptic is Bitcoin-specific and partially anonymized). §5.5 shows the tabular component generalizes to mobile-money data (PaySim), but the FP-reduction mechanism adds value only where baseline FPR is non-trivial — consistent with its design. (b) **GNN baselines** were tuned (hidden size, epochs, lr, dropout; 3 runs) but still failed to achieve the recall floor (≥0.65) under threshold optimization; temporal GNNs (e.g., EvolveGCN) may perform better. (c) The **90–95% industry FPR figure** is illustrated and aligned with, not independently proven. (d) **Feature anonymization** limits semantic interpretability of SHAP outputs. (e) **Variance reporting:** five-run means reported with 95% CI for the hybrid (Table 2). Baseline XGBoost is deterministic across seeds at 4 d.p.; hybrid recall SD = 0.0109 (95% CI ± 0.0095), driven by the cross-validated threshold search. Full per-run metrics are in `results/full_results.json`. (f) The **recall floor (0.65)** is a demonstration value, below typical production AML detection targets.
+(a) **Single primary dataset**; external validity to production banking data is not fully established (Elliptic is Bitcoin-specific and partially anonymized). §5.5 shows the tabular component generalizes to mobile-money data (PaySim), but the FP-reduction mechanism adds value only where baseline FPR is non-trivial — consistent with its design. (b) **GNN baselines** were tuned (hidden size, epochs, lr, dropout; 3 runs) but still failed to achieve the recall floor (≥0.65) under threshold optimization; temporal GNNs (e.g., EvolveGCN) may perform better. (c) The **90–95% industry FPR figure** is illustrated and aligned with, not independently proven. (d) **Feature anonymization** limits semantic interpretability of SHAP outputs. (e) **Variance reporting:** five-run means reported with 95% CI for the hybrid (Table 2); seeds 0–4. Baseline XGBoost is deterministic across seeds at 4 d.p.; hybrid recall SD = 0.0109 (95% CI ± 0.0095), driven by the cross-validated threshold search. GNN runs use seeds 0–2 (3 runs). Full per-run metrics are in `results/full_results.json`. (f) The **recall floor (0.65)** is a demonstration value, below typical production AML detection targets.
 
 ---
 
