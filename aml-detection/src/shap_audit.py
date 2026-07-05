@@ -2,7 +2,7 @@
 SHAP-based explainability module for AML model decisions.
 
 Generates per-transaction SHAP feature attributions and formats them as
-structured audit JSON aligned with FINRA Rule 4370 and SEC Rule 17a-4
+structured audit JSON aligned with FINRA Rule 4511 and SEC Rule 17a-4
 requirements for explainable audit trails.
 
 This bridges the legal explainability requirement — which FINRA and the SEC
@@ -13,7 +13,7 @@ its 2022 Circular on AI-based credit decisions.
 Regulatory alignment:
   FS AI RMF (Feb 2026) — Pillar 4 (Incident Response): requires institutions
   to maintain auditable records linking model outputs to model inputs.
-  FINRA Rule 4370: requires firms to document and explain automated decisions.
+  FINRA Rule 4511: requires firms to make and preserve books and records, incl. automated decision documentation.
   SEC Rule 17a-4: mandates preservation of business records including
   automated decision rationales.
   FinCEN SAR requirements: Suspicious Activity Report narratives must be
@@ -76,7 +76,7 @@ def transaction_audit_record(
     Build a single FINRA-aligned audit record for one transaction decision.
 
     The JSON schema is designed to satisfy:
-    - FINRA Rule 4370: automated alert documentation
+    - FINRA Rule 4511: books-and-records documentation of automated alerts
     - SEC Rule 17a-4: machine-readable audit record preservation
     - FinCEN SAR narrative support: feature-level evidence for report writing
 
@@ -113,7 +113,7 @@ def transaction_audit_record(
         "audit_metadata": {
             "regulatory_framework": [
                 "FS AI RMF (Feb 2026) — Pillar 4: Incident Response",
-                "FINRA Rule 4370 — Business Continuity and Automated Systems",
+                "FINRA Rule 4511 — Books and Records (General Requirements)",
                 "SEC Rule 17a-4 — Records Preservation",
                 "FinCEN SAR Requirements — 31 CFR 1020.320",
             ],

@@ -1,0 +1,112 @@
+{
+  "model_type": "gat",
+  "cost_sensitive": true,
+  "avg_metrics_default": {
+    "TP": 820.0,
+    "FP": 2236.3333,
+    "TN": 13350.6667,
+    "FN": 263.0,
+    "precision": 0.2689,
+    "recall": 0.7572,
+    "f1_illicit": 0.3967,
+    "false_positive_rate": 0.1434,
+    "false_negative_rate": 0.2428,
+    "auc_roc": 0.8899
+  },
+  "avg_metrics_recall_floor": {
+    "TP": 280.3333,
+    "FP": 227.6667,
+    "TN": 15359.3333,
+    "FN": 802.6667,
+    "precision": 0.5606,
+    "recall": 0.2588,
+    "f1_illicit": 0.3537,
+    "false_positive_rate": 0.0146,
+    "false_negative_rate": 0.7412,
+    "auc_roc": 0.8899,
+    "avg_optimal_threshold": 0.9636,
+    "recall_floor_constraint": 0.65
+  },
+  "per_run_default": [
+    {
+      "TP": 821,
+      "FP": 2440,
+      "TN": 13147,
+      "FN": 262,
+      "precision": 0.2518,
+      "recall": 0.7581,
+      "f1_illicit": 0.378,
+      "false_positive_rate": 0.1565,
+      "false_negative_rate": 0.2419,
+      "auc_roc": 0.8897
+    },
+    {
+      "TP": 819,
+      "FP": 2122,
+      "TN": 13465,
+      "FN": 264,
+      "precision": 0.2785,
+      "recall": 0.7562,
+      "f1_illicit": 0.4071,
+      "false_positive_rate": 0.1361,
+      "false_negative_rate": 0.2438,
+      "auc_roc": 0.893
+    },
+    {
+      "TP": 820,
+      "FP": 2147,
+      "TN": 13440,
+      "FN": 263,
+      "precision": 0.2764,
+      "recall": 0.7572,
+      "f1_illicit": 0.4049,
+      "false_positive_rate": 0.1377,
+      "false_negative_rate": 0.2428,
+      "auc_roc": 0.8869
+    }
+  ],
+  "per_run_recall_floor": [
+    {
+      "TP": 332,
+      "FP": 127,
+      "TN": 15460,
+      "FN": 751,
+      "precision": 0.7233,
+      "recall": 0.3066,
+      "f1_illicit": 0.4306,
+      "false_positive_rate": 0.0081,
+      "false_negative_rate": 0.6934,
+      "auc_roc": 0.8897
+    },
+    {
+      "TP": 280,
+      "FP": 241,
+      "TN": 15346,
+      "FN": 803,
+      "precision": 0.5374,
+      "recall": 0.2585,
+      "f1_illicit": 0.3491,
+      "false_positive_rate": 0.0155,
+      "false_negative_rate": 0.7415,
+      "auc_roc": 0.893
+    },
+    {
+      "TP": 229,
+      "FP": 315,
+      "TN": 15272,
+      "FN": 854,
+      "precision": 0.421,
+      "recall": 0.2114,
+      "f1_illicit": 0.2815,
+      "false_positive_rate": 0.0202,
+      "false_negative_rate": 0.7886,
+      "auc_roc": 0.8869
+    }
+  ],
+  "optimal_thresholds": [
+    0.9649814367294312,
+    0.9618746638298035,
+    0.9639350175857544
+  ],
+  "test_time_step": "[35 35 35 ... 49 49 49]"
+}

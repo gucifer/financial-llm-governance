@@ -25,7 +25,7 @@ That's the headline. The rest of the work is about what you do *after* you stop 
 
 ## F1 is the wrong scoreboard for AML
 
-Once you're on an honest split, the next trap is the metric. AML teams don't optimize `1 − F1`. They drown in false positives. Supervisors at the BIS Financial Stability Institute have put production false-positive rates at **90–95%** and U.S. compliance cost around **$25.3 billion a year** (Coelho et al., 2019). Every false positive is an analyst-hour.
+Once you're on an honest split, the next trap is the metric. AML teams don't optimize `1 − F1`. They drown in false positives. Industry sources cited by the BIS Financial Stability Institute put the share of alerts that turn out to be false positives at **90–95%** — an alert precision of 5–10%, which is a different quantity from the statistical FPR I measure below — and U.S. compliance cost around **$25.3 billion a year** (Coelho et al., 2019). Every false positive is an analyst-hour.
 
 So the real objective isn't "maximize F1." It's: **minimize the false-positive rate, subject to a floor on recall** (you still have to catch enough bad actors to satisfy your regulator). A model that lifts F1 by cranking recall can *raise* your false-positive bill. F1 hides that. FPR-at-a-recall-floor exposes it.
 
@@ -39,7 +39,9 @@ Here's the same study targeting the right objective — a cost-sensitive tree (c
 | Recall (illicit) | 0.7239 | 0.6726 | −0.05 |
 | AUC-ROC | 0.9432 | 0.8933 | −0.05 |
 
-Four false positives instead of 89 on the test period. That's the number an operations lead actually cares about.
+Four false positives instead of 89 on the test period. That's the number an operations lead actually cares about. (The symmetric cost: about 56 more illicit transactions missed — roughly 7% of what the baseline caught.)
+
+One more piece of honesty, added after a component ablation: **the FPR reduction comes from the threshold search, not the isolation-forest blend.** With the blend switched off, the pipeline hits the same 0.0003 FPR. What the blend buys is stability — it keeps recall above the 0.65 floor in every run (without it, 2 of 5 runs dip below) and adds about +0.01 recall at the same FPR. Cost-sensitive weighting alone actually *raises* FPR. Ablation table: `aml-detection/results/ablation_blend.json` in the repo.
 
 ![Per-time-step FPR and recall](../aml-detection/results/temporal_performance_comparison.png)
 
@@ -61,11 +63,11 @@ Elliptic is a graph, so the obvious move is a graph neural network. I ran vanill
 |---|---|---|---|
 | FP-optimized tree | 0.0003 | 0.8024 | 0.9945 |
 | GCN | 0.0206 | 0.6403 | 0.6735 |
-| GAT | 0.1526 | 0.3807 | 0.2549 |
+| GAT | 0.1434 | 0.3967 | 0.2689 |
 
 ![FPR and F1 by model family](../aml-detection/results/model_family_comparison.png)
 
-GAT's false-positive rate is roughly **500×** the tuned tree's. It flags everything. Graph structure alone does not cut false positives on Elliptic's engineered features — the cost-sensitive threshold does.
+GAT's false-positive rate is roughly **480×** the tuned tree's. It flags everything. Graph structure alone does not cut false positives on Elliptic's engineered features — the cost-sensitive threshold does.
 
 Caveat, stated plainly: these are *static, untuned* GNNs. Temporal graph methods like EvolveGCN (Pareja et al., 2020) model time explicitly and do better. I'm not saying graphs lose; I'm saying a vanilla graph net is not a free upgrade over a well-tuned tree, and you should benchmark before you believe the hype.
 
@@ -77,7 +79,7 @@ The reference pattern — no proprietary code, just the shape of it:
 
 1. **Ingress gateway** scrubs PII before any transaction payload reaches the model or a downstream LLM. Pattern-based redaction at the edge, not bolted on later.
 2. **Model scores** the transaction; SHAP attributions (Lundberg & Lee, 2017) are computed per flagged transaction.
-3. **Audit egress** writes each decision — score, threshold, top SHAP features — to a newline-delimited JSON record structured for **FINRA Rule 4370** and **SEC Rule 17a-4** retention.
+3. **Audit egress** writes each decision — score, threshold, top SHAP features — to a newline-delimited JSON record structured for **FINRA Rule 4511** and **SEC Rule 17a-4** retention.
 
 The gateway is what turns a model output into a defensible regulatory artifact. The honest evaluation above is what makes the artifact worth defending.
 
@@ -91,7 +93,7 @@ The gateway is what turns a model output into a defensible regulatory artifact. 
 
 Code, seeds, and the full results set: **github.com/gucifer/financial-llm-governance**. The companion preprint covers the methodology in full.
 
-*One thing I won't claim: this study does not independently prove the industry's 90–95% false-positive figure. That number describes rule-based production banking systems, not an ML benchmark on Bitcoin. The study illustrates the problem and aligns with the figure. It doesn't certify it. Same discipline as everything else here.*
+*One thing I won't claim: this study does not independently prove the industry's 90–95% false-positive figure. That number describes the share of alerts that are false positives in rule-based production banking systems — not the statistical FPR, and not an ML benchmark on Bitcoin. The study illustrates the problem and aligns with the figure. It doesn't certify it. Same discipline as everything else here.*
 
 ---
 

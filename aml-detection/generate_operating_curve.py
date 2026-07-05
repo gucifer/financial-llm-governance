@@ -96,7 +96,7 @@ def main():
     # --- Known GNN operating points (from full_results.json) ---
     gnn_points = {
         "GCN (default)":         {"fpr": 0.0206, "rec": 0.6104, "marker": "^", "color": "#e67e22"},
-        "GAT (default)":         {"fpr": 0.1526, "rec": 0.7516, "marker": "v", "color": "#8e44ad"},
+        "GAT (default)":         {"fpr": 0.1434, "rec": 0.7572, "marker": "v", "color": "#8e44ad"},
         "GCN (tuned)":           {"fpr": 0.0017, "rec": 0.2108, "marker": "^", "color": "#e67e22",
                                    "facecolor": "none"},
         "GAT (tuned)":           {"fpr": 0.0130, "rec": 0.2545, "marker": "v", "color": "#8e44ad",

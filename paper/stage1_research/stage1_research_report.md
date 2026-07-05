@@ -51,7 +51,7 @@ Pareja et al. (2020) introduced EvolveGCN at AAAI 2020 (vol. 34, pp. 5363–5370
 
 ### 2.4 Cost-sensitive learning, boosting, and explainability
 
-The supervised engine is XGBoost (Chen & Guestrin, 2016), with class imbalance addressed through `scale_pos_weight` set to the licit-to-illicit ratio. Decision-threshold optimization under a recall constraint is the mechanism by which FPR is reduced. Model explainability uses SHAP (Lundberg & Lee, 2017), whose additive feature-attribution values are mapped to per-transaction audit records aligned with FINRA Rule 4370 and SEC Rule 17a-4 record-retention expectations.
+The supervised engine is XGBoost (Chen & Guestrin, 2016), with class imbalance addressed through `scale_pos_weight` set to the licit-to-illicit ratio. Decision-threshold optimization under a recall constraint is the mechanism by which FPR is reduced. Model explainability uses SHAP (Lundberg & Lee, 2017), whose additive feature-attribution values are mapped to per-transaction audit records aligned with FINRA Rule 4511 and SEC Rule 17a-4 record-retention expectations.
 
 ### 2.5 Synthesis and the gap
 
@@ -76,7 +76,7 @@ Across this corpus, three themes converge. (1) Graph structure does not automati
 
 **Validity controls.** Five-run averaging; leakage-free threshold tuning; temporal-versus-random control experiment; reproducible code, seeds, and environment.
 
-**Explainability/audit.** SHAP attributions exported to per-transaction NDJSON audit records mapped to FINRA Rule 4370 / SEC Rule 17a-4.
+**Explainability/audit.** SHAP attributions exported to per-transaction NDJSON audit records mapped to FINRA Rule 4511 / SEC Rule 17a-4.
 
 **Reporting standard.** No human subjects; no IRB required. Reproducibility checklist (data version, seeds, environment) is the governing guideline.
 
@@ -125,7 +125,7 @@ With identical hyperparameters, random splitting inflates F1 from 0.80 to 0.94, 
 
 **Interpretation.** The study demonstrates that the practically relevant lever for AML cost reduction is not a more expressive model class but a cost-sensitive decision threshold tuned under a compliance recall constraint. The FPR reduction is large and real on this dataset, but it is achieved by trading a controlled amount of recall and AUC for precision — a trade the AML cost function favors, and one the study reports without obfuscation.
 
-**Implications for regulatory AI.** The result maps to the U.S. Treasury FS AI RMF emphasis on measurable model performance and to FinCEN's AML-modernization agenda. The SHAP-to-audit-record layer addresses the explainability and recordkeeping expectations embedded in FINRA Rule 4370 and SEC Rule 17a-4.
+**Implications for regulatory AI.** The result maps to the U.S. Treasury FS AI RMF emphasis on measurable model performance and to FinCEN's AML-modernization agenda. The SHAP-to-audit-record layer addresses the explainability and recordkeeping expectations embedded in FINRA Rule 4511 and SEC Rule 17a-4.
 
 **Limitations.** (a) Single dataset; external validity to production banking data is not established. (b) GNN baselines are vanilla and may be undertuned relative to temporal GNNs. (c) The 90–95% industry FPR figure is illustrated and aligned with, not independently proven. (d) Elliptic's features are partially anonymized, limiting feature-level interpretability of the SHAP outputs.
 

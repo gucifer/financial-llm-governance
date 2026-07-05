@@ -86,7 +86,7 @@ The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neur
 | XGBoost baseline | 0.0057 | 0.7239 | 0.8981 | 0.8016 | 0.9432 |
 | **Hybrid FP-optimised** | **0.0003** | 0.6726 | 0.9945 | 0.8024 | 0.8933 |
 | GCN (default threshold) | 0.0206 | 0.6104 | 0.6735 | 0.6403 | 0.8787 |
-| GAT (default threshold) | 0.1526 | 0.7516 | 0.2549 | 0.3807 | 0.8851 |
+| GAT (default threshold) | 0.1434 | 0.7572 | 0.2689 | 0.3967 | 0.8899 |
 | GCN (tuned, recall-floor†) | 0.0017 | 0.2108 | 0.8989 | 0.3412 | 0.8837 |
 | GAT (tuned, recall-floor†) | 0.0130 | 0.2545 | 0.5863 | 0.3529 | 0.8893 |
 
@@ -136,7 +136,7 @@ aml-detection/
 │   ├── data_loader.py           # dataset loading + temporal split
 │   ├── baseline.py              # Feedzai XGBoost baseline + FPR metrics
 │   ├── hybrid_pipeline.py       # cost-sensitive XGB + threshold opt + IF blend
-│   ├── shap_audit.py            # SHAP → FINRA Rule 4370 audit JSON
+│   ├── shap_audit.py            # SHAP → FINRA Rule 4511 audit JSON
 │   ├── eval_harness.py          # drift detection + calibration + temporal monitoring
 │   └── gnn_baseline.py          # GCN / GAT graph baselines (same temporal protocol)
 ├── notebooks/
@@ -178,7 +178,7 @@ The notebook runs all stages in order:
 | FPR measurement and comparison | Pillar 2 — Risk Identification | Requires institutions to quantify and document model error rates |
 | Cost-sensitive training | Pillar 2 — Risk Identification | Addresses systematic bias in alert generation |
 | Threshold optimisation | Pillar 2 — Risk Identification | Operationalises recall-floor constraint as a documented institutional policy |
-| SHAP audit JSON | Pillar 4 — Incident Response | Produces machine-readable decision rationale for FINRA Rule 4370 / SEC Rule 17a-4 |
+| SHAP audit JSON | Pillar 4 — Incident Response | Produces machine-readable decision rationale for FINRA Rule 4511 / SEC Rule 17a-4 |
 | Drift detection + calibration | Pillar 4 — Incident Response | Implements the monitoring trigger required for model retraining disclosure |
 | LLM eval tie-in | Pillar 4 — Incident Response | Connects AML model drift to downstream LLM hallucination re-evaluation |
 

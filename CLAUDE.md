@@ -49,6 +49,7 @@ This file is the master context document for all Claude Code sessions working in
 - Annual AML compliance cost to U.S. institutions: **USD 25.3 billion** — LexisNexis Risk Solutions (2018), *2018 True Cost of Compliance Study*, as cited in Coelho, De Simoni & Prenio (2019), FSI Insights No. 18, BIS, p. 3
 - Primary source: Coelho, R., De Simoni, M. & Prenio, J. (2019). *Suptech applications for anti-money laundering.* FSI Insights No. 18, BIS, August 2019. https://www.bis.org/fsi/publ/insights18.pdf
 - **Measured study result:** FPR 0.0057 → 0.0003 (−94.7% relative) on Elliptic test set, recall 0.6726 (floor ≥ 0.65 satisfied), F1 0.8024
+- **Component attribution (ablation 2026-07-05, `results/ablation_blend.json`):** the FPR reduction comes from the CV recall-floor threshold search, NOT the IF blend — blend OFF reaches the same FPR 0.0003 (3.8 vs 4.0 FP). The IF blend's contribution is recall at fixed FPR (+0.012 mean, positive in all 5 paired seeds, p≈0.07) and floor stability (blend OFF violates the 0.65 floor in 2/5 runs; blend ON in 0/5). Cost weighting alone RAISES FPR (0.0192). **Never claim the blend causes the FPR reduction** — in petition/patent text, attribute FPR reduction to threshold optimization and describe the blend as recall/threshold stabilization.
 
 ---
 
@@ -148,7 +149,7 @@ financial-llm-governance/
 │   │   ├── data_loader.py       ← loads Elliptic, temporal split
 │   │   ├── baseline.py          ← Feedzai XGBoost baseline + FPR metrics
 │   │   ├── hybrid_pipeline.py   ← cost-sensitive XGB + CV threshold opt + IF blend
-│   │   ├── shap_audit.py        ← SHAP → FINRA Rule 4370 / SEC Rule 17a-4 audit JSON
+│   │   ├── shap_audit.py        ← SHAP → FINRA Rule 4511 / SEC Rule 17a-4 audit JSON
 │   │   └── eval_harness.py      ← KS drift + Brier/ECE calibration + temporal FPR
 │   ├── notebooks/
 │   │   └── aml_fp_reduction_study.ipynb  ← end-to-end executable (DONE, clean run)
@@ -185,14 +186,14 @@ financial-llm-governance/
 
 ### Model-family comparison (graph baselines — `src/gnn_baseline.py`)
 
-GCN (Kipf & Welling 2017) and GAT (Veličković et al. 2018) on the actual transaction graph (203,769 nodes, ~470k undirected edges, same 165 features), evaluated under the **same** temporal split + illicit-class/FPR metrics. Cost-sensitive (class-weighted loss); recall-floor threshold tuned on a leakage-free training-period hold-out.
+GCN (Kipf & Welling 2017) and GAT (Veličković et al. 2018) on the actual transaction graph (203,769 nodes, 234,355 edges (~469k directed entries after symmetrization), same 165 features), evaluated under the **same** temporal split + illicit-class/FPR metrics. Cost-sensitive (class-weighted loss); recall-floor threshold tuned on a leakage-free training-period hold-out.
 
 | Model | FPR | F1 (illicit) | AUC |
 |-------|-----|------|-----|
 | XGBoost baseline | 0.0057 | 0.8016 | 0.9432 |
 | Hybrid FP-optimised | 0.0003 | 0.8024 | 0.8933 |
 | GCN | 0.0206 | 0.6403 | 0.8787 |
-| GAT | 0.1526 | 0.3807 | 0.8851 |
+| GAT | 0.1434 | 0.3967 | 0.8899 |
 
 **Finding:** gradient-boosted trees beat vanilla GNNs on Elliptic's engineered features (consistent with Weber 2019 / Feedzai); graph structure alone does NOT reduce FPR — the cost-sensitive threshold pipeline does. (GCN runtime ~13 min, GAT ~7 min on CPU.)
 

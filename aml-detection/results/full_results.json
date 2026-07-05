@@ -105,13 +105,13 @@
     "sd_precision": 0.0001,
     "ci95_precision": 0.0001,
     "sd_recall": 0.0109,
-    "ci95_recall": 0.0095,
+    "ci95_recall": 0.0135,
     "sd_f1_illicit": 0.0078,
-    "ci95_f1_illicit": 0.0068,
+    "ci95_f1_illicit": 0.0097,
     "sd_false_positive_rate": 0.0,
     "ci95_false_positive_rate": 0.0,
     "sd_false_negative_rate": 0.0109,
-    "ci95_false_negative_rate": 0.0095,
+    "ci95_false_negative_rate": 0.0135,
     "sd_auc_roc": 0.0,
     "ci95_auc_roc": 0.0,
     "per_run_metrics": [
@@ -218,16 +218,18 @@
     "auc_roc": 0.8787
   },
   "gat": {
-    "TP": 814.0,
-    "FP": 2379.0,
-    "TN": 13208.0,
-    "FN": 269.0,
-    "precision": 0.2549,
-    "recall": 0.7516,
-    "f1_illicit": 0.3807,
-    "false_positive_rate": 0.1526,
-    "false_negative_rate": 0.2484,
-    "auc_roc": 0.8851
+    "TP": 820.0,
+    "FP": 2236.3333,
+    "TN": 13350.6667,
+    "FN": 263.0,
+    "precision": 0.2689,
+    "recall": 0.7572,
+    "f1_illicit": 0.3967,
+    "false_positive_rate": 0.1434,
+    "false_negative_rate": 0.2428,
+    "auc_roc": 0.8899,
+    "n_runs": 3,
+    "note": "3-seed rerun 2026-07-05 (seeds 0-2); earlier value was a single run. Per-run detail: results/gat_vanilla_3runs.json"
   },
   "evaluation_pitfalls": {
     "random_split": {
@@ -455,7 +457,7 @@
     "hidden": 256,
     "epochs": 300,
     "lr": 0.005,
-    "dropout": 0.3,
+    "dropout": 0.4,
     "n_runs": 3,
     "threshold_mode": "recall_floor_0.65",
     "per_run_recall_floor": [
@@ -495,7 +497,8 @@
         "false_negative_rate": 0.7784,
         "auc_roc": 0.8768
       }
-    ]
+    ],
+    "dropout_note": "library default; tune_gnn.py intended 0.3 but run_gnn_baseline() does not expose dropout"
   },
   "gat_tuned": {
     "TP": 275.6667,
@@ -514,7 +517,7 @@
     "heads": 4,
     "epochs": 200,
     "lr": 0.005,
-    "dropout": 0.3,
+    "dropout": 0.4,
     "n_runs": 3,
     "threshold_mode": "recall_floor_0.65",
     "per_run_recall_floor": [
@@ -554,6 +557,8 @@
         "false_negative_rate": 0.7322,
         "auc_roc": 0.8853
       }
-    ]
-  }
+    ],
+    "dropout_note": "library default; tune_gnn.py intended 0.3 but run_gnn_baseline() does not expose dropout"
+  },
+  "ci_method": "t distribution, 4 df (t=2.776), CI = t*SD/sqrt(5); updated 2026-07-05"
 }

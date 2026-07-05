@@ -18,7 +18,7 @@ The gap is acute in two areas:
 
 **AML/KYC false positives.** The U.S. anti-money laundering compliance industry operates at a **90–95% false-positive rate**, costing U.S. financial institutions an estimated **USD 25.3 billion annually** in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019). AI-driven transaction analysis can reduce this rate by an order of magnitude — but only under rigorous governance that prevents model opacity, hallucination, and PII leakage from creating new regulatory exposures.
 
-**Regulatory Q&A hallucination.** LLMs queried against FINRA, SEC, and FinCEN guidance produce confident but factually incorrect citations at rates incompatible with audit trail requirements under FINRA Rule 4370 and SEC Rule 17a-4. Without a verifiable output-validation layer, these systems cannot be deployed in regulated environments.
+**Regulatory Q&A hallucination.** LLMs queried against FINRA, SEC, and FinCEN guidance produce confident but factually incorrect citations at rates incompatible with audit trail requirements under FINRA Rule 4511 and SEC Rule 17a-4. Without a verifiable output-validation layer, these systems cannot be deployed in regulated environments.
 
 This repository is the reference architecture I designed to close both gaps.
 
@@ -116,13 +116,13 @@ I designed a multi-layer sovereign gateway that enforces authentication, PII scr
 
 **Open-source contributions:**
 - [Portkey-AI/gateway PR #1691](https://github.com/Portkey-AI/gateway/pull/1691) — production-level Cloudflare Workers AI provider migration
-- Planned: FS AI RMF guardrail plugin mapping Portkey's plugin interface to the 230 Treasury control objectives; U.S. financial PII pattern library (ABA/ACH/ITIN/EIN); FINRA/SEC audit log schema (Rule 4370 / 17a-4); FinCEN SAR/STR output validator
+- Planned: FS AI RMF guardrail plugin mapping Portkey's plugin interface to the 230 Treasury control objectives; U.S. financial PII pattern library (ABA/ACH/ITIN/EIN); FINRA/SEC audit log schema (Rule 4511 / 17a-4); FinCEN SAR/STR output validator
 
 ---
 
 ## Goal 2 — AI Risk Management & Observability Pipelines
 
-**Directory:** `observability/` · **Status:** reference design (directory scaffolded); the eval/observability layer — drift detection, calibration, temporal FPR monitoring — is implemented within [`aml-detection/`](aml-detection/) (`src/eval_harness.py`) · **Regulatory anchor:** FS AI RMF Pillar 4 (Incident Response) · FINRA Rule 4370 · SEC Rule 17a-4 · NIST AI RMF Measure function
+**Directory:** `observability/` · **Status:** reference design (directory scaffolded); the eval/observability layer — drift detection, calibration, temporal FPR monitoring — is implemented within [`aml-detection/`](aml-detection/) (`src/eval_harness.py`) · **Regulatory anchor:** FS AI RMF Pillar 4 (Incident Response) · FINRA Rule 4511 · SEC Rule 17a-4 · NIST AI RMF Measure function
 
 I designed an observability pipeline that captures full LLM traces, detects hallucinations in regulatory content, and generates FINRA-compliant audit trails for every model decision. Every response is traceable from raw input through inference to the final output validator.
 
@@ -144,7 +144,7 @@ A reproducible study that reduces the **false-positive rate (FPR)** of a supervi
 
 > The U.S. AML compliance industry generates false positives on **90–95%** of flagged transactions, costing U.S. financial institutions an estimated **USD 25.3 billion annually** in unnecessary investigation work (Coelho, De Simoni & Prenio, *Suptech applications for anti-money laundering*, FSI Insights No. 18, BIS, August 2019, p. 3; citing LexisNexis Risk Solutions, *2018 True Cost of Compliance Study*; and Saaradeey et al., *Disrupting status quo in AML compliance*, Oracle White Paper, 2019).
 
-**What was built:** a three-part pipeline over the Feedzai supervised baseline on the public **Elliptic Bitcoin dataset** — (1) cost-sensitive XGBoost (`scale_pos_weight` = class ratio), (2) cross-validated threshold optimisation under a recall floor (≥ 0.65), (3) Isolation-Forest anomaly blending — plus SHAP → FINRA Rule 4370 audit JSON (covers Goal 4), a drift/calibration eval harness (covers Goal 2), GCN/GAT graph baselines, and an evaluation-pitfalls control.
+**What was built:** a three-part pipeline over the Feedzai supervised baseline on the public **Elliptic Bitcoin dataset** — (1) cost-sensitive XGBoost (`scale_pos_weight` = class ratio), (2) cross-validated threshold optimisation under a recall floor (≥ 0.65), (3) Isolation-Forest anomaly blending — plus SHAP → FINRA Rule 4511 audit JSON (covers Goal 4), a drift/calibration eval harness (covers Goal 2), GCN/GAT graph baselines, and an evaluation-pitfalls control.
 
 ### Measured results (Elliptic dataset, temporal split, 5-run average)
 
@@ -159,7 +159,7 @@ A reproducible study that reduces the **false-positive rate (FPR)** of a supervi
 - **Model-family check:** gradient-boosted trees beat vanilla GNNs on Elliptic (GCN F1 0.64, GAT F1 0.38) — graph structure alone does **not** cut FPR; the cost-sensitive threshold pipeline does.
 - **Evaluation-pitfalls control:** random splitting leaks future time steps and inflates F1 from 0.80 → 0.94 — which is why public Elliptic notebooks report F1 > 0.93. Every number above uses the honest temporal split (train steps 1–34, test 35–49).
 
-**Scope & honesty caveat:** this study demonstrates FPR-reduction *methodology* on a public benchmark. The 94.7% relative FPR reduction is an ML-layer result on the Elliptic dataset; it **illustrates and aligns with** — but does **not** independently prove — the industry-wide 90–95% figure, which refers to alert-level false positives in rule-based production AML systems and rests on the BIS/LexisNexis citation above.
+**Scope & honesty caveat:** this study demonstrates FPR-reduction *methodology* on a public benchmark. The 94.7% relative FPR reduction is an ML-layer result on the Elliptic dataset; it **illustrates and aligns with** — but does **not** independently prove — the industry-wide 90–95% figure, which refers to alert-level false positives in rule-based production AML systems and rests on the BIS/LexisNexis citation above. A component ablation (`aml-detection/results/ablation_blend.json`) attributes the FPR reduction to the recall-floor threshold search; the Isolation-Forest blend contributes recall stability at the fixed operating point (keeps all runs above the 0.65 floor), not FPR reduction.
 
 **Open-source artifact:** a U.S.-regulatory-aligned extension of [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) on the public Elliptic dataset, mapping the FPR-reduction methodology to FS AI RMF Pillar 2 control objectives. Source modules, an end-to-end notebook, and 15+ result artifacts are in [`aml-detection/`](aml-detection/).
 
@@ -167,12 +167,12 @@ A reproducible study that reduces the **false-positive rate (FPR)** of a supervi
 
 ## Goal 4 — Agentic AI for Regulatory Document Automation
 
-**Directory:** `xai-compliance/` · **Status:** reference design (directory scaffolded); the SHAP → FINRA Rule 4370 / SEC Rule 17a-4 audit-JSON generator is implemented within [`aml-detection/`](aml-detection/) (`src/shap_audit.py`, 2,713 audit records in `results/audit_log.ndjson`) · **Regulatory anchor:** FINRA Rule 4370 · SEC Rule 17a-4 · FS AI RMF Pillar 1 (Governance) · FinCEN SAR requirements
+**Directory:** `xai-compliance/` · **Status:** reference design (directory scaffolded); the SHAP → FINRA Rule 4511 / SEC Rule 17a-4 audit-JSON generator is implemented within [`aml-detection/`](aml-detection/) (`src/shap_audit.py`, 2,713 audit records in `results/audit_log.ndjson`) · **Regulatory anchor:** FINRA Rule 4511 · SEC Rule 17a-4 · FS AI RMF Pillar 1 (Governance) · FinCEN SAR requirements
 
 I designed an explainability and document automation layer that generates FINRA-compliant audit JSON for every AML decision and produces Suspicious Transaction Report (STR) content auditable under FinCEN XML schema requirements.
 
 **Key components:**
-- **SHAP feature attribution:** Per-transaction feature importance values formatted as FINRA Rule 4370 audit trail JSON; provides regulators with a machine-readable explanation of every model decision
+- **SHAP feature attribution:** Per-transaction feature importance values formatted as FINRA Rule 4511 audit trail JSON; provides regulators with a machine-readable explanation of every model decision
 - **LIME local explanations:** Instance-level explanations for edge cases and human review queue items where SHAP global attributions are insufficient
 - **NeMo Guardrails (step 11):** Enforces STR field schema compliance on LLM output before delivery — prevents structurally invalid reports from reaching compliance officers
 - **MLflow model registry:** Model versioning, model cards, and governance lifecycle tracking; eval trigger (step 14) writes results back to the model card on every re-evaluation run
@@ -203,7 +203,7 @@ Status legend: **✅ shipped/implemented** · **Planned** = on the roadmap, not 
 | Repository | Stars | Status | Contribution |
 |------------|-------|--------|--------------|
 | [feedzai/research-aml-elliptic](https://github.com/feedzai/research-aml-elliptic) | — | ✅ Implemented | U.S.-regulatory FPR-reduction extension on the public Elliptic dataset, mapped to FS AI RMF Pillar 2 — see [`aml-detection/`](aml-detection/) |
-| [Portkey-AI/gateway](https://github.com/Portkey-AI/gateway) | 12.1k | ✅ Shipped | [PR #1691](https://github.com/Portkey-AI/gateway/pull/1691): Cloudflare Workers AI provider migration. *Planned:* FS AI RMF guardrail plugin, U.S. financial PII patterns (ABA/ACH/ITIN/EIN), FINRA/SEC audit log schema (Rule 4370 / 17a-4) |
+| [Portkey-AI/gateway](https://github.com/Portkey-AI/gateway) | 12.1k | ✅ Shipped | [PR #1691](https://github.com/Portkey-AI/gateway/pull/1691): Cloudflare Workers AI provider migration. *Planned:* FS AI RMF guardrail plugin, U.S. financial PII patterns (ABA/ACH/ITIN/EIN), FINRA/SEC audit log schema (Rule 4511 / 17a-4) |
 | [langfuse/langfuse](https://github.com/langfuse/langfuse) | — | Planned | Financial hallucination eval suite; FS AI RMF Pillar 4 audit trail module |
 
 ---

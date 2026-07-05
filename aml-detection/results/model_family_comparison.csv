@@ -2,4 +2,4 @@ model,false_positive_rate,recall,precision,f1_illicit,auc_roc
 XGBoost baseline,0.0057,0.7239,0.8981,0.8016,0.9432
 Hybrid FP-optimised,0.0003,0.6726,0.9945,0.8024,0.8933
 GCN,0.0206,0.6104,0.6735,0.6403,0.8787
-GAT,0.1526,0.7516,0.2549,0.3807,0.8851
+GAT,0.1434,0.7572,0.2689,0.3967,0.8899

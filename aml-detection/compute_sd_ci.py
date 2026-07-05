@@ -28,10 +28,16 @@ METRICS_OF_INTEREST = [
 
 
 def sd_ci(values: list[float]) -> tuple[float, float]:
-    """Return (std, half-width of 95% CI) for a list of run values."""
+    """Return (std, half-width of 95% CI) for a list of run values.
+
+    Uses the t distribution (n-1 df), not z: with n=5 runs the z multiplier
+    understates the interval by ~30% (t(0.975, 4) = 2.776 vs 1.96).
+    """
+    from scipy import stats
     arr = np.array(values, dtype=float)
     std = float(np.std(arr, ddof=1))  # sample std
-    ci95 = 1.96 * std / np.sqrt(len(arr))
+    tmult = stats.t.ppf(0.975, len(arr) - 1)
+    ci95 = tmult * std / np.sqrt(len(arr))
     return round(std, 4), round(ci95, 4)
 
 
