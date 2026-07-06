@@ -280,11 +280,12 @@ If you use this work, please cite:
   title   = {Financial LLM Governance: Sovereign AI Gateways and AML False-Positive Reduction},
   year    = {2026},
   url     = {https://github.com/gucifer/financial-llm-governance},
+  doi     = {10.5281/zenodo.21226030},
   note    = {U.S. Provisional Patent Application No. 64/105,503, filed July 6, 2026}
 }
 ```
 
-Archived snapshots of this repository are assigned a DOI via Zenodo: [![DOI](https://zenodo.org/badge/DOI/PLACEHOLDER.svg)](https://doi.org/PLACEHOLDER)
+Archived snapshots of this repository are assigned a DOI via Zenodo: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21226030.svg)](https://doi.org/10.5281/zenodo.21226030)
 
 ---
 
