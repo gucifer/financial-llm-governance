@@ -270,6 +270,24 @@ I specialize in production LLM orchestration, AI risk management, and regulatory
 
 ---
 
+## Citation
+
+If you use this work, please cite:
+
+```bibtex
+@software{parikh_financial_llm_governance,
+  author  = {Parikh, Arpan},
+  title   = {Financial LLM Governance: Sovereign AI Gateways and AML False-Positive Reduction},
+  year    = {2026},
+  url     = {https://github.com/gucifer/financial-llm-governance},
+  note    = {U.S. Provisional Patent Application No. 64/105,503, filed July 6, 2026}
+}
+```
+
+Archived snapshots of this repository are assigned a DOI via Zenodo: [![DOI](https://zenodo.org/badge/DOI/PLACEHOLDER.svg)](https://doi.org/PLACEHOLDER)
+
+---
+
 ## License
 
 [MIT](LICENSE)
