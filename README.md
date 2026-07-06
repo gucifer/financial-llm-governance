@@ -146,6 +146,8 @@ A reproducible study that reduces the **false-positive rate (FPR)** of a supervi
 
 **What was built:** a three-part pipeline over the Feedzai supervised baseline on the public **Elliptic Bitcoin dataset** — (1) cost-sensitive XGBoost (`scale_pos_weight` = class ratio), (2) cross-validated threshold optimisation under a recall floor (≥ 0.65), (3) Isolation-Forest anomaly blending — plus SHAP → FINRA Rule 4511 audit JSON (covers Goal 4), a drift/calibration eval harness (covers Goal 2), GCN/GAT graph baselines, and an evaluation-pitfalls control.
 
+**Patent pending:** the threshold-calibration method (Isolation Forest trained within each cross-validation fold on licit-class data, with within-fold score blending prior to recall-floor threshold selection) is the subject of U.S. Provisional Patent Application No. 64/105,503, filed July 6, 2026.
+
 ### Measured results (Elliptic dataset, temporal split, 5-run average)
 
 | Metric | Baseline XGBoost (Feedzai) | Hybrid FP-Optimised | Δ |

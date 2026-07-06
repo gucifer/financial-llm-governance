@@ -206,6 +206,8 @@ The choice of split and objective, not model expressiveness, governs the credibi
 
 **Reproducibility.** Code, seeds, and the full results set are available at the companion repository.
 
+**Intellectual property disclosure.** The within-fold anomaly-blend threshold-calibration method described in Section 4 is the subject of U.S. Provisional Patent Application No. 64/105,503 (filed July 6, 2026) by the author. Code is released for research and reproducibility purposes.
+
 ---
 
 ## References
