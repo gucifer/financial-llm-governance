@@ -2,20 +2,20 @@
 
 **Author:** Arpan Parikh  
 **Affiliation:** Senior ML Engineer, U.S. financial services  
-**Regulatory anchor:** U.S. Treasury FS AI RMF (Feb 2026) — Pillar 2 (Risk Identification) · FinCEN Strategic Plan 2022–2025 · FS AI RMF Pillar 4 (Incident Response)
+**Regulatory anchor:** U.S. Treasury FS AI RMF (Feb 2026), Pillar 2 (Risk Identification) · FinCEN Strategic Plan 2022–2025 · FS AI RMF Pillar 4 (Incident Response)
 
 ---
 
 ## The Problem
 
-The U.S. anti-money laundering (AML) compliance industry operates at a **90–95% false-positive rate** on flagged transactions — meaning 90 to 95 cents of every compliance dollar spent on alert investigation goes toward reviewing licit activity, not actual money laundering.
+The U.S. anti-money laundering (AML) compliance industry operates at a **90–95% false-positive rate** on flagged transactions: 90 to 95 cents of every compliance dollar spent on alert investigation goes to reviewing licit activity rather than actual money laundering.
 
 > Coelho, De Simoni & Prenio (2019). *Suptech applications for anti-money laundering.* FSI Insights No. 18, Bank for International Settlements, August 2019, p. 3.  
 > Citing: LexisNexis Risk Solutions (2018), *True Cost of Compliance Study*; and Saaradeey et al. (2019), *Disrupting status quo in AML compliance*, Oracle White Paper.
 
 This rate is the direct consequence of legacy rule-based alert systems optimised for recall (catch every illicit transaction) with no constraint on precision (avoid flagging licit ones). The annual cost to U.S. financial institutions exceeds **USD 25.3 billion** in investigation work, staffing, and remediation (same source, p. 3).
 
-The U.S. Treasury's February 2026 Financial Services AI Risk Management Framework (FS AI RMF) establishes 230 control objectives across four pillars and explicitly identifies uncontrolled AI deployment — including uncalibrated, high-FPR AML models — as a **systemic vulnerability** to U.S. economic stability. Pillar 2 (Risk Identification) requires institutions to measure, document, and reduce model error rates including false-positive rates.
+The U.S. Treasury's February 2026 Financial Services AI Risk Management Framework (FS AI RMF) establishes 230 control objectives across four pillars and explicitly identifies uncontrolled AI deployment (including uncalibrated, high-FPR AML models) as a **systemic vulnerability** to U.S. economic stability. Pillar 2 (Risk Identification) requires institutions to measure, document, and reduce model error rates including false-positive rates.
 
 ---
 
@@ -26,15 +26,15 @@ This study extends the supervised AML baseline from:
 > Lorenz, Silva & Aparício (2021). Machine learning methods to detect money laundering in the Bitcoin blockchain in the presence of label scarcity. arXiv:2005.14635.  
 > GitHub: https://github.com/feedzai/research-aml-elliptic
 
-**Our contribution:** The Feedzai (2021) baseline optimises for illicit-class F1 score — a balanced precision-recall measure. For the AML compliance use case, the operationally important metric is **false-positive rate (FPR)**: the fraction of licit transactions wrongly flagged for human review. F1 optimisation does not minimise FPR. We introduce a pipeline that does.
+**Our contribution:** The Feedzai (2021) baseline optimises for illicit-class F1 score, a balanced precision-recall measure. For the AML compliance use case, the operationally important metric is **false-positive rate (FPR)**: the fraction of licit transactions wrongly flagged for human review. F1 optimisation does not minimise FPR, so we introduce a pipeline that targets FPR directly.
 
 **Three changes over the Feedzai baseline:**
 
-1. **Cost-sensitive XGBoost** — `scale_pos_weight` is set to the licit/illicit class ratio (~40:1 on the Elliptic dataset). This shifts the model's learned probability outputs toward the illicit class without raising the global decision threshold, improving its ability to separate genuine illicit signals from licit noise.
+1. **Cost-sensitive XGBoost:** `scale_pos_weight` is set to the licit/illicit class ratio (~40:1 on the Elliptic dataset). This shifts the model's learned probability outputs toward the illicit class without raising the global decision threshold, improving its ability to separate genuine illicit signals from licit noise.
 
-2. **Precision-recall threshold optimisation** — instead of the default 0.5 decision threshold, we sweep thresholds on held-out training folds (5-fold stratified CV) and select the threshold that **minimises FPR subject to recall ≥ 0.70**. This operationalises the compliance team's actual constraint: miss at most 30% of illicit transactions, minimise false alarms on everything else.
+2. **Precision-recall threshold optimisation:** Instead of the default 0.5 decision threshold, we sweep thresholds on held-out training folds (5-fold stratified CV) and select the threshold that **minimises FPR subject to recall ≥ 0.70**. This operationalises the compliance team's actual constraint: miss at most 30% of illicit transactions, minimise false alarms on everything else.
 
-3. **Isolation Forest blending** — an Isolation Forest trained on licit-class transactions only provides an anomaly signal (low weight: 0.15) that amplifies the XGBoost probability for structurally unusual transactions, reducing the fraction of unusual-but-licit transactions that the supervised model over-flags.
+3. **Isolation Forest blending:** An Isolation Forest trained on licit-class transactions only provides an anomaly signal (low weight: 0.15) that amplifies the XGBoost probability for structurally unusual transactions, reducing the fraction of unusual-but-licit transactions that the supervised model over-flags.
 
 **Scope:** This study is a reproducible demonstration of FPR reduction methodology on public data. The results illustrate and align with the industry-wide 90–95% FPR figure cited above; they do not independently prove that figure, which rests on the BIS/LexisNexis citation.
 
@@ -42,7 +42,7 @@ This study extends the supervised AML baseline from:
 
 ## Dataset
 
-**Elliptic Bitcoin dataset** — publicly available at https://www.kaggle.com/datasets/ellipticco/elliptic-data-set
+**Elliptic Bitcoin dataset**, publicly available at https://www.kaggle.com/datasets/ellipticco/elliptic-data-set
 
 > Weber et al. (2019). Anti-Money Laundering in Bitcoin: Experimenting with Graph Convolutional Networks for Financial Forensics. KDD Workshop. arXiv:1908.02591.
 
@@ -79,7 +79,7 @@ Recall constraint: ≥ 0.65 (satisfied: 0.6726). Results are 5-run means ± 95% 
 
 ### Model-family comparison (graph baselines)
 
-The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neural Networks — GCN (Kipf & Welling, 2017) and GAT (Veličković et al., 2018) — under the **same** temporal split and the **same** illicit-class / FPR metrics. Both Weber et al. (2019) and the Feedzai paper include a GCN, so a graph baseline is expected.
+The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neural Networks, GCN (Kipf & Welling, 2017) and GAT (Veličković et al., 2018), under the **same** temporal split and the **same** illicit-class / FPR metrics. Both Weber et al. (2019) and the Feedzai paper include a GCN, so a graph baseline is expected.
 
 | Model | FPR | Recall | Precision | F1 (illicit) | AUC-ROC |
 |-------|-----|--------|-----------|--------------|---------|
@@ -92,22 +92,22 @@ The Elliptic dataset is a transaction graph, so we also benchmark two Graph Neur
 
 *† Recall-floor threshold search (target ≥ 0.65) applied but floor not achieved. GCN: hidden=256, 300 epochs, lr=0.005; GAT: hidden=32, heads=4, 200 epochs. 3 runs each.*
 
-**Finding:** On Elliptic's hand-engineered features, trees outperform vanilla GNNs (GCN F1 0.64, GAT F1 0.38). Tuning GNNs and applying the recall-floor threshold search reduces FPR (GCN: 0.021→0.0017; GAT: 0.153→0.013), but recall collapses to 0.21/0.25 — far below the 0.65 floor. The XGBoost hybrid achieves FPR=0.0003 at recall=0.67 (floor met). GNN probability scores do not support simultaneous FPR reduction and recall ≥ 0.65; the FPR reduction comes from the cost-sensitive threshold pipeline, not from the model family.
+**Finding:** On Elliptic's hand-engineered features, trees outperform vanilla GNNs (GCN F1 0.64, GAT F1 0.38). Tuning GNNs and applying the recall-floor threshold search reduces FPR (GCN: 0.021→0.0017; GAT: 0.153→0.013), but recall collapses to 0.21/0.25, far below the 0.65 floor. The XGBoost hybrid achieves FPR=0.0003 at recall=0.67 (floor met). GNN probability scores do not support simultaneous FPR reduction and recall ≥ 0.65; the FPR reduction comes from the cost-sensitive threshold pipeline, not from the model family.
 
 ### Common evaluation pitfalls
 
-Public Elliptic notebooks routinely report illicit-class F1 > 0.93. Using our **own** XGBoost — identical model and hyperparameters, changing only the split — shows why:
+Public Elliptic notebooks routinely report illicit-class F1 > 0.93. Using our **own** XGBoost (identical model and hyperparameters, changing only the split) shows why:
 
 | Split | FPR | Recall | Precision | F1 (illicit) | AUC-ROC |
 |-------|-----|--------|-----------|--------------|---------|
 | Random 70/30 (leaky) | 0.0007 | 0.8959 | 0.9927 | **0.9418** | 0.9961 |
 | Temporal 1–34 / 35–49 (honest) | 0.0057 | 0.7239 | 0.8981 | **0.8016** | 0.9432 |
 
-Random splitting leaks future time steps into training and averages out the documented post-timestep-43 performance cliff, inflating F1 from 0.80 to 0.94 — exactly the range seen in notebooks that random-split. The temporal results reported throughout this study are therefore the honest, harder, and operationally correct numbers.
+Random splitting leaks future time steps into training and averages out the documented post-timestep-43 performance cliff, inflating F1 from 0.80 to 0.94, exactly the range seen in notebooks that random-split. The temporal results reported throughout this study are therefore the honest, harder, and operationally correct numbers.
 
 ### External validity: PaySim mobile-money dataset
 
-To test cross-domain generalization, we replicate the protocol on PaySim (Lopez-Rojas et al., 2016) — a synthetic mobile-money simulator (6.36M transactions, 0.13% fraud prevalence) with balance-sheet features instead of anonymized graph features. Same temporal split (~70/30), same XGBoost baseline, same hybrid pipeline.
+To test cross-domain generalization, we replicate the protocol on PaySim (Lopez-Rojas et al., 2016), a synthetic mobile-money simulator (6.36M transactions, 0.13% fraud prevalence) with balance-sheet features instead of anonymized graph features. Same temporal split (~70/30), same XGBoost baseline, same hybrid pipeline.
 
 | Dataset | Model | FPR | Recall | F1 (illicit) | AUC |
 |---------|-------|-----|--------|--------------|-----|
@@ -116,7 +116,7 @@ To test cross-domain generalization, we replicate the protocol on PaySim (Lopez-
 | PaySim | Baseline | 0.0 | 0.7768 | 0.8727 | 0.9913 |
 | PaySim | Hybrid | 0.0 | 0.6888 | 0.8137 | 0.9999 |
 
-**Finding:** PaySim baseline already achieves FPR = 0.0 at the default threshold — mobile-money features are more separable than Bitcoin graph features. Consequently the hybrid's FP-reduction component provides no marginal benefit; the recall-floor constraint slightly compresses recall (0.78→0.69) without any FPR gain. **The threshold optimization pipeline adds value proportional to baseline FPR.** Where baseline FPR ≈ 0, use plain XGBoost. Where baseline FPR is non-trivial (as in Elliptic), the hybrid cuts it by 94.7%.
+**Finding:** PaySim baseline already achieves FPR = 0.0 at the default threshold; mobile-money features are more separable than Bitcoin graph features. Consequently the hybrid's FP-reduction component provides no marginal benefit; the recall-floor constraint slightly compresses recall (0.78→0.69) without any FPR gain. **The threshold optimization pipeline adds value proportional to baseline FPR.** Where baseline FPR ≈ 0, use plain XGBoost. Where baseline FPR is non-trivial (as in Elliptic), the hybrid cuts it by 94.7%.
 
 ---
 
@@ -175,12 +175,12 @@ The notebook runs all stages in order:
 
 | Component | FS AI RMF Pillar | Control Objective |
 |-----------|-----------------|-------------------|
-| FPR measurement and comparison | Pillar 2 — Risk Identification | Requires institutions to quantify and document model error rates |
-| Cost-sensitive training | Pillar 2 — Risk Identification | Addresses systematic bias in alert generation |
-| Threshold optimisation | Pillar 2 — Risk Identification | Operationalises recall-floor constraint as a documented institutional policy |
-| SHAP audit JSON | Pillar 4 — Incident Response | Produces machine-readable decision rationale for FINRA Rule 4511 / SEC Rule 17a-4 |
-| Drift detection + calibration | Pillar 4 — Incident Response | Implements the monitoring trigger required for model retraining disclosure |
-| LLM eval tie-in | Pillar 4 — Incident Response | Connects AML model drift to downstream LLM hallucination re-evaluation |
+| FPR measurement and comparison | Pillar 2: Risk Identification | Requires institutions to quantify and document model error rates |
+| Cost-sensitive training | Pillar 2: Risk Identification | Addresses systematic bias in alert generation |
+| Threshold optimisation | Pillar 2: Risk Identification | Operationalises recall-floor constraint as a documented institutional policy |
+| SHAP audit JSON | Pillar 4: Incident Response | Produces machine-readable decision rationale for FINRA Rule 4511 / SEC Rule 17a-4 |
+| Drift detection + calibration | Pillar 4: Incident Response | Implements the monitoring trigger required for model retraining disclosure |
+| LLM eval tie-in | Pillar 4: Incident Response | Connects AML model drift to downstream LLM hallucination re-evaluation |
 
 ---
 
